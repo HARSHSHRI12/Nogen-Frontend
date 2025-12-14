@@ -1,0 +1,491 @@
+/* E-Coin Hero Section */
+.ecoin-hero {
+    padding: 120px 0 80px;
+    background-color: #f8f9fa;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ecoin-hero:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 10% 20%, rgba(255, 215, 0, 0.05) 0%, rgba(255, 215, 0, 0) 80%);
+  }
+  
+  .ecoin-hero-content h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+  
+  .ecoin-hero-content h1 span {
+    color: #ffd700;
+    position: relative;
+  }
+  
+  .ecoin-hero-content h1 span:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 8px;
+    background-color: rgba(255, 215, 0, 0.2);
+    bottom: 5px;
+    left: 0;
+    z-index: -1;
+  }
+  
+  .ecoin-hero-content p {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+  
+  .ecoin-hero-image {
+    position: relative;
+  }
+  
+  .ecoin-hero-image img {
+    border-radius: 10px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .coin-floating {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: #ffd700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.5);
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .coin-floating i {
+    font-size: 1.5rem;
+  }
+  
+  .coin-1 {
+    top: 20%;
+    left: -25px;
+    animation-delay: 0s;
+  }
+  
+  .coin-2 {
+    top: 50%;
+    right: -25px;
+    animation-delay: 1s;
+  }
+  
+  .coin-3 {
+    bottom: 10%;
+    left: 10%;
+    animation-delay: 2s;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+  
+  /* Earn Section */
+  .earn-section {
+    background-color: #fff;
+  }
+  
+  .earn-card {
+    padding: 30px;
+    text-align: center;
+    background-color: #fff;
+    height: 100%;
+    transition: all 0.3s ease;
+    border: 1px solid #eee;
+  }
+  
+  .earn-icon {
+    width: 70px;
+    height: 70px;
+    background-color: rgba(255, 215, 0, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+  
+  .earn-icon i {
+    font-size: 1.8rem;
+    color: #ffd700;
+  }
+  
+  .earn-card h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+  
+  .earn-card p {
+    color: #6c757d;
+    margin-bottom: 15px;
+  }
+  
+  .coin-value {
+    display: inline-block;
+    background-color: rgba(255, 215, 0, 0.1);
+    color: #ffd700;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  
+  .coin-value i {
+    margin-right: 5px;
+  }
+  
+  /* Redeem Section */
+  .redeem-section {
+    background-color: #f8f9fa;
+  }
+  
+  .redeem-card {
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  .redeem-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 1;
+  }
+  
+  .redeem-badge span {
+    display: inline-block;
+    background-color: #ff6b6b;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  
+  .redeem-content {
+    padding: 20px;
+  }
+  
+  .redeem-content h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .redeem-content p {
+    color: #6c757d;
+    margin-bottom: 20px;
+    min-height: 60px;
+  }
+  
+  .redeem-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .redeem-price span {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffd700;
+  }
+  
+  .redeem-price span i {
+    margin-right: 5px;
+  }
+  
+  .redeem-price button {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+  }
+  
+  /* Leaderboard Section */
+  .leaderboard-section {
+    background-color: #fff;
+  }
+  
+  .leaderboard-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .leaderboard-top {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin-bottom: 50px;
+  }
+  
+  .leaderboard-user {
+    text-align: center;
+    position: relative;
+    padding: 0 20px;
+  }
+  
+  .leaderboard-rank {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 30px;
+    background-color: #ffd700;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    z-index: 1;
+  }
+  
+  .leaderboard-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 15px;
+    border: 3px solid #eee;
+  }
+  
+  .leaderboard-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .leaderboard-info h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .leaderboard-info p {
+    color: #ffd700;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .leaderboard-user.first {
+    transform: scale(1.2);
+    z-index: 2;
+  }
+  
+  .leaderboard-user.first .leaderboard-avatar {
+    border-color: #ffd700;
+  }
+  
+  .leaderboard-user.second .leaderboard-avatar {
+    border-color: #c0c0c0;
+  }
+  
+  .leaderboard-user.third .leaderboard-avatar {
+    border-color: #cd7f32;
+  }
+  
+  .leaderboard-table {
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+  
+  .leaderboard-header {
+    display: flex;
+    background-color: #f8f9fa;
+    padding: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .leaderboard-row {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    transition: all 0.3s ease;
+  }
+  
+  .leaderboard-row:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .leaderboard-col {
+    display: flex;
+    align-items: center;
+  }
+  
+  .leaderboard-col.rank {
+    width: 10%;
+    justify-content: center;
+    font-weight: 600;
+  }
+  
+  .leaderboard-col.user {
+    width: 50%;
+  }
+  
+  .leaderboard-col.user img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+  }
+  
+  .leaderboard-col.coins {
+    width: 20%;
+    justify-content: center;
+    color: #ffd700;
+    font-weight: 600;
+  }
+  
+  .leaderboard-col.level {
+    width: 20%;
+    justify-content: center;
+  }
+  
+  /* FAQ Section */
+  .faq-section {
+    background-color: #f8f9fa;
+  }
+  
+  .faq-item {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+  }
+  
+  .faq-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .faq-item h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+    display: flex;
+    align-items: center;
+  }
+  
+  .faq-item h3 i {
+    color: #ffd700;
+    margin-right: 10px;
+    font-size: 1.3rem;
+  }
+  
+  .faq-item p {
+    font-size: 1rem;
+    color: #6c757d;
+    margin: 0;
+    line-height: 1.6;
+  }
+  
+  /* Responsive Styles */
+  @media screen and (max-width: 992px) {
+    .ecoin-hero-content h1 {
+      font-size: 2.5rem;
+    }
+    
+    .ecoin-hero-image {
+      margin-top: 50px;
+    }
+    
+    .leaderboard-top {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .leaderboard-user {
+      margin-bottom: 30px;
+    }
+    
+    .leaderboard-user.first {
+      order: -1;
+      transform: scale(1);
+    }
+  }
+  
+  @media screen and (max-width: 768px) {
+    .ecoin-hero {
+      padding: 100px 0 60px;
+    }
+    
+    .ecoin-hero-content h1 {
+      font-size: 2rem;
+    }
+    
+    .leaderboard-col.user {
+      width: 40%;
+    }
+    
+    .leaderboard-col.coins {
+      width: 25%;
+    }
+    
+    .leaderboard-col.level {
+      width: 25%;
+    }
+  }
+  
+  @media screen and (max-width: 576px) {
+    .redeem-price {
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .leaderboard-header {
+      display: none;
+    }
+    
+    .leaderboard-row {
+      flex-wrap: wrap;
+    }
+    
+    .leaderboard-col.rank {
+      width: 20%;
+    }
+    
+    .leaderboard-col.user {
+      width: 80%;
+    }
+    
+    .leaderboard-col.coins {
+      width: 50%;
+      justify-content: flex-start;
+      padding-left: 20%;
+      margin-top: 10px;
+    }
+    
+    .leaderboard-col.level {
+      width: 50%;
+      justify-content: flex-start;
+      margin-top: 10px;
+    }
+  }
