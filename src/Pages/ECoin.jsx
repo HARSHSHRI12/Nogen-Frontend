@@ -16,7 +16,7 @@ const ECoin = () => {
                 transition={{ duration: 0.8 }}
               >
                 <h1>Earn & Redeem <span>E-Coins</span></h1>
-                <p>Our unique reward system that lets you earn coins for using QuickNotes AI and redeem them for premium features and templates.</p>
+                <p>Our unique reward system that lets you earn coins for using Nogen AI and redeem them for premium features and templates.</p>
                 <motion.button 
                   className="btn-primary-custom"
                   whileHover={{ scale: 1.05 }}
@@ -367,7 +367,7 @@ const ECoin = () => {
             <div className="col-lg-6" data-aos="fade-up" data-aos-delay="100">
               <div className="faq-item">
                 <h3><i className="fas fa-question-circle"></i> What are E-Coins?</h3>
-                <p>E-Coins are our virtual currency that you can earn by using QuickNotes AI and completing various activities. They can be redeemed for premium features, templates, and other benefits.</p>
+                <p>E-Coins are our virtual currency that you can earn by using Nogen AI and completing various activities. They can be redeemed for premium features, templates, and other benefits.</p>
               </div>
             </div>
             <div className="col-lg-6" data-aos="fade-up" data-aos-delay="200">

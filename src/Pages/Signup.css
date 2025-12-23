@@ -336,35 +336,67 @@
     margin-top: 25px;
   }
   
-  .checkbox-group {
-    display: flex;
-    align-items: flex-start;
-  }
-  
-  .checkbox-group input {
-    margin-right: 10px;
-    margin-top: 3px;
-  }
-  
-  .checkbox-group label {
-    font-size: 0.9rem;
-    color: #6c757d;
-  }
-  
-  .checkbox-group label a {
-    color: var(--primary-color);
-    text-decoration: none;
-  }
-  
-  .checkbox-group label a:hover {
-    text-decoration: underline;
-  }
+.checkbox-group label {
+  display: flex;             
+  align-items: flex-start;   
+  font-size: 0.9rem;
+  color: #6c757d;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 10px;
+  margin-top: 4px;           
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.checkbox-group label span {
+  display: inline-block;
+}
+
+.checkbox-group label a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.checkbox-group label a:hover {
+  text-decoration: underline;
+}
+
   
   .form-buttons {
     display: flex;
     gap: 15px;
     margin-bottom: 25px;
   }
+  .form-footer {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  margin-top: 20px;
+}
+
+.already-account {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.login-link {
+  color: #0d6efd;          
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+
   
   .back-btn {
     flex: 1;
@@ -374,6 +406,7 @@
     background-color: transparent;
     color: #333;
     border: 1px solid #ddd;
+  
   }
   
   .back-btn i {
@@ -382,7 +415,7 @@
   
   .signup-btn {
     flex: 2;
-    padding: 12px;
+    padding: 12 px;
     font-size: 1rem;
     font-weight: 500;
   }

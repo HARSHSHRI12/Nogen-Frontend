@@ -18,11 +18,9 @@ class NogenVoiceAssistant {
 
     start() {
         if (this.hasInitialized) {
-            console.log("⚠️ Nogen already initialized");
             return;
         }
 
-        console.log("🔥 Nogen start() called");
         this.hasInitialized = true;
 
         document.addEventListener("click", () => {
@@ -34,28 +32,23 @@ class NogenVoiceAssistant {
 
     initRecognition() {
         try {
-            console.log("🎤 Initializing speech recognition...");
             this.recognitionRunning = true;
 
             this.recognition.onstart = () => {
                 this.isRecognizing = true;
-                console.log("🎙️ Recognition started");
             };
 
             this.recognition.onresult = this.processCommand.bind(this);
 
             this.recognition.onerror = (event) => {
-                console.error("❌ Speech error:", event.error);
                 this.isRecognizing = false;
 
                 if (['aborted', 'no-speech', 'network'].includes(event.error)) {
-                    console.warn("⚠️ Restarting recognition due to error...");
                     setTimeout(() => this.recognition.start(), 500);
                 }
             };
 
             this.recognition.onend = () => {
-                console.log("🔁 Speech recognition ended");
                 this.isRecognizing = false;
                 if (this.isListening) {
                     setTimeout(() => this.recognition.start(), 500);
@@ -64,7 +57,6 @@ class NogenVoiceAssistant {
 
             if (!this.isRecognizing) {
                 this.recognition.start();
-                console.log("✅ Speech recognition started");
             }
 
             if (!this.greeted) {
@@ -73,14 +65,12 @@ class NogenVoiceAssistant {
             }
 
         } catch (error) {
-            console.error("❌ Recognition start failed:", error);
             setTimeout(() => this.initRecognition(), 1000);
         }
     }
 
     greetUser() {
         if (this.synth.speaking) {
-            console.log("⏳ Already speaking, skipping greeting");
             return;
         }
 
@@ -88,19 +78,17 @@ class NogenVoiceAssistant {
         const greeting = hour < 12 ? 'Good morning' : 'Good evening';
         const message = `${greeting}, Welcome to Quick Notes AI. I am your assistant, Nogen. Ask anything if you want.`;
 
-        console.log("🗣️ Greeting Message:", message);
 
         const utterance = new SpeechSynthesisUtterance(message);
-        utterance.onstart = () => console.log("✅ Started greeting");
-        utterance.onend = () => console.log("✅ Finished greeting");
-        utterance.onerror = (e) => console.error("❌ Greeting error:", e);
+        utterance.onstart = () => {};
+        utterance.onend = () => {};
+        utterance.onerror = (e) => {};
 
         this.synth.speak(utterance);
     }
 
     processCommand(event) {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-        console.log('📥 User said:', transcript);
 
         if (!this.isListening && transcript.includes(this.triggerWord)) {
             this.isListening = true;
@@ -129,14 +117,13 @@ class NogenVoiceAssistant {
 
     speak(message) {
         if (!this.synth) {
-            console.error("❌ Speech Synthesis not supported");
             return;
         }
 
         this.synth.cancel();
         const utterance = new SpeechSynthesisUtterance(message);
-        utterance.onstart = () => console.log("🗣️ Speaking:", message);
-        utterance.onerror = (event) => console.error("❌ Speech error:", event.error);
+        utterance.onstart = () => {};
+        utterance.onerror = (event) => {};
 
         setTimeout(() => {
             this.synth.speak(utterance);

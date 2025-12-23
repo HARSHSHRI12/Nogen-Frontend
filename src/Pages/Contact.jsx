@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import axios from 'axios'
+import axiosInstance from '../api/axios'
 import './Contact.css'
 
 const Contact = () => {
@@ -26,9 +26,8 @@ const Contact = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:3500/api/contact', formData);
+      const response = await axiosInstance.post('/contact', formData);
       if (response.status === 200) {
-        console.log('Form submitted:', formData);
         setFormSubmitted(true);
         setErrorMessage(''); // Clear any previous error message
 
@@ -44,7 +43,6 @@ const Contact = () => {
         }, 3000);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
       setErrorMessage('Failed to send the message. Please try again later.');
     }
   };
@@ -66,7 +64,7 @@ const Contact = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                Have questions about QuickNotes AI? We're here to help. Fill out the form and our team will get back to you as soon as possible.
+                Have questions about Nogen AI? We're here to help. Fill out the form and our team will get back to you as soon as possible.
               </motion.p>
               
               <div className="contact-methods">
@@ -272,13 +270,13 @@ const Contact = () => {
           <div className="row">
             <div className="col-md-6">
               <div className="faq-item">
-                <h3><i className="fas fa-question-circle"></i> How can I get started with QuickNotes AI?</h3>
+                <h3><i className="fas fa-question-circle"></i> How can I get started with Nogen AI?</h3>
                 <p>Simply sign up for a free account on our website and follow the onboarding process. You'll be taking smart notes in minutes!</p>
               </div>
             </div>
             <div className="col-md-6">
               <div className="faq-item">
-                <h3><i className="fas fa-question-circle"></i> Is my data secure with QuickNotes AI?</h3>
+                <h3><i className="fas fa-question-circle"></i> Is my data secure with Nogen AI?</h3>
                 <p>Absolutely! We use enterprise-grade encryption and security protocols to ensure your notes and personal information are always protected.</p>
               </div>
             </div>

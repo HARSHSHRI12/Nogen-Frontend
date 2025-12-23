@@ -11,18 +11,61 @@
   --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-* {
+html, body {
+  height: 100%; /* Ensure html and body take full height */
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
 body {
   font-family: 'Poppins', sans-serif;
   background-color: var(--background-color);
   color: var(--text-color);
-  overflow-x: hidden;
+  overflow-y: auto; /* Enable vertical scrolling when content overflows */
+  transition: background-color 0.3s ease, color 0.3s ease, font-size 0.3s ease;
 }
+
+/* Theme Classes */
+body.theme-light {
+  --background-color: #f8f9fa;
+  --text-color: #212529;
+}
+
+body.theme-dark {
+  --background-color: #34333b; /* Darker background */
+  --text-color: #e0e0e0; /* Lighter text */
+  --primary-color: #7a9bff; /* Adjust primary for dark theme */
+  --secondary-color: #adb5bd;
+  --dark-color: #f8f9fa; /* Reverse dark/light for elements */
+  --light-color: #343a40;
+}
+
+/* Font Size Classes */
+body.font-small {
+  font-size: 0.875rem; /* 14px */
+}
+
+body.font-medium {
+  font-size: 1rem; /* 16px - default */
+}
+
+body.font-large {
+  font-size: 1.125rem; /* 18px */
+}
+
+/* Text Style Classes */
+body.text-style-default {
+  font-family: 'Poppins', sans-serif;
+}
+
+body.text-style-serif {
+  font-family: 'Georgia', serif;
+}
+
+body.text-style-monospace {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}
+
 
 a {
   text-decoration: none;

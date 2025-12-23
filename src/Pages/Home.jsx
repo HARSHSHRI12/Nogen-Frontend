@@ -5,7 +5,7 @@ import './Home.css'
 import NogenVoiceAssistant from "../components/NogenVoiceAssistant"; 
 const Home = () => {
   const navigate = useNavigate();
-  const nogenRef = useRef(null); // 🔁 Keeps the same instance on re-renders
+  const nogenRef = useRef(null); //  Keeps the same instance on re-renders
 
   useEffect(() => {
     const nogen = new NogenVoiceAssistant();
@@ -26,7 +26,7 @@ const Home = () => {
                 transition={{ duration: 0.8 }}
               >
                 <h1>Capture Ideas Smarter with <span>AI-Powered</span> Notes</h1>
-                <p>QuickNotes AI transforms how you take notes with intelligent organization, summarization, and insights - all powered by advanced artificial intelligence.</p>
+                <p>Nogen AI transforms how you take notes with intelligent organization, summarization, and insights - all powered by advanced artificial intelligence.</p>
                 <div className="hero-buttons">
                   <motion.button 
                     className="btn-primary-custom"
@@ -69,7 +69,7 @@ const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
-                <img src="https://placehold.co/600x400/4a6bff/ffffff?text=QuickNotes+AI" alt="QuickNotes AI Dashboard" className="img-fluid" />
+                <img src="https://placehold.co/600x400/4a6bff/ffffff?text=QuickNotes+AI" alt="Nogen AI Dashboard" className="img-fluid" />
                 <div className="hero-image-shape"></div>
               </motion.div>
             </div>
@@ -84,7 +84,7 @@ const Home = () => {
         <div className="container">
           <div className="section-header text-center" data-aos="fade-up">
             <h2>Powerful Features</h2>
-            <p>Discover how QuickNotes AI can transform your note-taking experience</p>
+            <p>Discover how Nogen AI can transform your note-taking experience</p>
           </div>
           <div className="row">
             <div className="col-md-4" data-aos="fade-up" data-aos-delay="100">
@@ -202,7 +202,7 @@ const Home = () => {
                   <i className="fas fa-star"></i>
                   <i className="fas fa-star"></i>
                 </div>
-                <p className="testimonial-text">"QuickNotes AI has completely changed how I organize my thoughts. The AI suggestions are incredibly accurate and save me hours of work."</p>
+                <p className="testimonial-text">"Nogen AI has completely changed how I organize my thoughts. The AI suggestions are incredibly accurate and save me hours of work."</p>
                 <div className="testimonial-author">
                   <img src="harsh.jpg" height={"135px"} width={"135px"} alt="Harsh Shrivastva" />
                   <div>
@@ -221,7 +221,7 @@ const Home = () => {
                   <i className="fas fa-star"></i>
                   <i className="fas fa-star"></i>
                 </div>
-                <p className="testimonial-text">"As a student, QuickNotes AI has been a game-changer for my studies. The smart connections feature helps me see relationships between different subjects."</p>
+                <p className="testimonial-text">"As a student, Nogen AI has been a game-changer for my studies. The smart connections feature helps me see relationships between different subjects."</p>
                 <div className="testimonial-author">
                   <img src="anshu.jpg" height={"135px"} width={"135px"} alt="Himanshu Shrivastava" />
                   <div>
@@ -240,7 +240,7 @@ const Home = () => {
                   <i className="fas fa-star"></i>
                   <i className="fas fa-star-half-alt"></i>
                 </div>
-                <p className="testimonial-text">"The E-Coin rewards system makes using QuickNotes AI even more enjoyable. I've unlocked several premium templates that have improved my workflow."</p>
+                <p className="testimonial-text">"The E-Coin rewards system makes using Nogen AI even more enjoyable. I've unlocked several premium templates that have improved my workflow."</p>
                 <div className="testimonial-author">
                   <img src="harsh.jpg" height={"135px"} width={"135px"} alt="Harsh Shrivastva" />
                   <div>
