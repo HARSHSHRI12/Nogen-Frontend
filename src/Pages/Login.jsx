@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import axios from 'axios'
+import axiosInstance from '../api/axios'
 import './Login.css'
+import { useAuth } from '../context/AuthContext'
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -47,34 +49,28 @@ const Login = () => {
         password: formData.password.trim()
       };
   
-      console.log("Sending login request with:", payload);
-  
       // Make the API call with proper headers and timeout
-      const response = await axios.post(
-        'http://localhost:3500/api/auth/login',
+      const response = await axiosInstance.post(
+        '/auth/login',
         payload,
         {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
           timeout: 10000 // 10 second timeout
         }
       );
   
-      console.log("Login response:", response.data);
-  
-      // Validate response structure
-      if (!response.data?.token || !response.data?.user) {
-        throw new Error("Invalid response structure from server");
+      // Validate response structure (token is sent via HTTP-only cookie, so not in body)
+      if (!response.data?.user) {
+        throw new Error("Invalid response structure from server: Missing user data");
       }
   
-      const { token, user } = response.data;
-  
-      // Store authentication data based on rememberMe choice
-      const storage = formData.rememberMe ? localStorage : sessionStorage;
-      storage.setItem('token', token);
-      storage.setItem('userData', JSON.stringify(user));
+      const { user } = response.data;
+      
+      // Since tokens are HTTP-only cookies, we don't store them in localStorage/sessionStorage
+      // and thus no need to validate token format on the frontend from response body.
+      // The presence of 'user' in the response is sufficient for successful login.
+
+      // Now update auth context with user
+      login(user);
   
       // Determine the redirect path based on user role
       let redirectPath = '/profile'; // Default redirect path
@@ -88,14 +84,11 @@ const Login = () => {
       navigate(redirectPath, { replace: true });
   
     } catch (err) {
-      console.error("Full error object:", err);
       
       let errorMessage = "Login failed. Please try again.";
       
       if (err.response) {
         // Server responded with error status
-        console.error("Response data:", err.response.data);
-        console.error("Response status:", err.response.status);
         
         if (err.response.data?.errors?.[0]?.msg) {
           errorMessage = err.response.data.errors[0].msg;
@@ -106,11 +99,9 @@ const Login = () => {
         }
       } else if (err.request) {
         // Request was made but no response received
-        console.error("No response received:", err.request);
         errorMessage = "Server is not responding. Please try again later.";
       } else {
         // Something else happened
-        console.error("Request setup error:", err.message);
       }
       
       setError(errorMessage);
@@ -292,7 +283,9 @@ const Login = () => {
                       </motion.button>
 
                       <div className="register-link mt-3">
-                        <p>Don't have an account? <Link to="/Signup">Signup here</Link></p>
+                        <p className="already-account">
+                        Don't have an account? <Link to="/Signup" className="login-link">Signup here</Link>
+                         </p>
                       </div>
                     </form>
                   </motion.div>

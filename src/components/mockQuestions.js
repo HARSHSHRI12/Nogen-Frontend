@@ -11,7 +11,7 @@ export const easyQuestions = [
         { input: 'input 2', output: 'output 2' },
       ],
       boilerplate: {
-        javascript: 'console.log("Easy Question 1 solution")',
+        javascript: '// Easy Question 1 solution',
         python: 'print("Easy Question 1 solution")',
       },
       solved: false,
@@ -32,7 +32,7 @@ export const easyQuestions = [
         { input: 'input 4', output: 'output 4' },
       ],
       boilerplate: {
-        javascript: 'console.log("Medium Question 1 solution")',
+        javascript: '// Medium Question 1 solution',
         python: 'print("Medium Question 1 solution")',
       },
       solved: false,
@@ -53,7 +53,7 @@ export const easyQuestions = [
         { input: 'input 6', output: 'output 6' },
       ],
       boilerplate: {
-        javascript: 'console.log("Hard Question 1 solution")',
+        javascript: '// Hard Question 1 solution',
         python: 'print("Hard Question 1 solution")',
       },
       solved: false,

@@ -86,7 +86,7 @@ const Footer = () => {
         
         <div className="footer-bottom">
           <div className="copyright">
-            <p>&copy; {new Date().getFullYear()} QuickNotes AI. All Rights Reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Nogen AI. All Rights Reserved.</p>
           </div>
           <div className="footer-bottom-links">
             <a href="#">Privacy</a>
