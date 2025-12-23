@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import './Signup.css';
+import { motion } from 'framer-motion';
+import axiosInstance from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
   const navigate = useNavigate();  // For redirection
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -59,14 +62,15 @@ const Signup = () => {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/[A-Z]/.test(formData.password)) {
+    }
+    else if (!/[A-Z]/.test(formData.password)) {
       newErrors.password = 'Password must contain at least one uppercase letter';
     } else if (!/[a-z]/.test(formData.password)) {
       newErrors.password = 'Password must contain at least one lowercase letter';
     } else if (!/[0-9]/.test(formData.password)) {
       newErrors.password = 'Password must contain at least one number';
     } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one special character';
+      newErrors.password = 'Password must contain at least. one special character';
     }
 
     // Confirm Password Validation: Should match the password
@@ -103,17 +107,13 @@ const Signup = () => {
     if (!validate()) return; // Ensure validation passes before submitting
 
     try {
-      const response = await fetch('http://localhost:3500/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      const response = await axiosInstance.post('/auth/signup', formData);
 
-      const data = await response.json();
+      const data = response.data;
 
       if (response.status === 200 || response.status === 201) {
+        login(data.user);
         localStorage.setItem('token', data.token); // Store token
-        localStorage.setItem('userData', JSON.stringify(data.user)); // Store user data
         alert('Signup successful!');
         navigate('/profile'); // Redirect to profile page after signup
       } else {
@@ -146,7 +146,7 @@ const Signup = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.3 }}
                       >
-                        <h2>Join QuickNotes AI</h2>
+                        <h2>Join Nogen AI</h2>
                         <p>Create your account and start organizing your ideas with the power of artificial intelligence.</p>
                       </motion.div>
                     </div>
@@ -162,7 +162,7 @@ const Signup = () => {
                   >
                     <div className="signup-header">
                       <h3>Create Account</h3>
-                      <p>Sign up for free and start using QuickNotes AI</p>
+                      <p>Sign up for free and start using Nogen AI</p>
                     </div>
 
                     <div className="signup-steps">
@@ -249,7 +249,9 @@ const Signup = () => {
                           </select>
                         </div>
 
-                        <div className="form-group checkbox-group">
+                       <div className="form-group checkbox-group">
+                      <div className="checkbox-group">
+                        <label>
                           <input
                             type="checkbox"
                             id="agreeTerms"
@@ -258,12 +260,25 @@ const Signup = () => {
                             onChange={handleChange}
                             required
                           />
-                          <label htmlFor="agreeTerms">I agree to the terms and conditions</label>
-                          {errors.agreeTerms && <p className="error-text">{errors.agreeTerms}</p>}
-                        </div>
+                          <span>
+                            I agree to the <a href="#">terms and conditions</a>
+                          </span>
+                        </label>
+                      </div>
 
-                        <button type="submit" className="btn btn-primary">Next</button>
-                        <p className="already-account">Already have an account? <Link to="/login">Login</Link></p>
+                      {errors.agreeTerms && (
+                        <p className="error-text">{errors.agreeTerms}</p>
+                      )}
+                      </div>
+                        <div className="form-footer">
+                        <p className="already-account">
+                          Already have an account? <Link to="/login" className="login-link">Login</Link>
+                        </p>
+
+                        <button type="submit" className="btn btn-primary">
+                          Next
+                        </button>
+                      </div>
                       </form>
                     ) : (
                       <form className="signup-form" onSubmit={handleSubmit}>

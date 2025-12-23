@@ -1,0 +1,75 @@
+.settings-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+  margin-top: 80px;
+}
+
+.settings-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+  animation: fadeInDown 0.6s ease;
+}
+
+.settings-header h1 {
+  font-size: 42px;
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+.settings-header p {
+  font-size: 16px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 20px 16px;
+    margin-top: 70px;
+  }
+
+  .settings-header h1 {
+    font-size: 32px;
+  }
+
+  .settings-header p {
+    font-size: 14px;
+  }
+
+  .settings-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-page {
+    padding: 15px 12px;
+    margin-top: 60px;
+  }
+
+  .settings-header h1 {
+    font-size: 28px;
+  }
+
+  .settings-header p {
+    font-size: 13px;
+  }
+}

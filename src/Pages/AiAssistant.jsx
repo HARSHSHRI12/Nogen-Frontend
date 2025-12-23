@@ -15,9 +15,9 @@ const AiAssistant = () => {
   // State declarations
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([
-    { 
-      type: 'assistant', 
-      text: 'Hello! I\'m your Quick Notes AI assistant. Please fill in your details to get started.',
+    {
+      type: 'assistant',
+      text: "Hello! I'm your AI assistant. Choose 'Notes Mode' for generating comprehensive notes or switch to 'Tutor Mode' for interactive learning. Please fill in your details to get started.",
       timestamp: new Date().toISOString(),
       id: Date.now()
     }
@@ -33,6 +33,8 @@ const AiAssistant = () => {
   const [generatedImages, setGeneratedImages] = useState([]);
   const [advancedInput, setAdvancedInput] = useState('');
   const [messages, setMessages] = useState([]);
+  const [isTutorMode, setIsTutorMode] = useState(false); // New state for tutor mode
+  const [tutorRequestType, setTutorRequestType] = useState(''); // New state for tutor request type
   //for quize 
   const [showQuiz, setShowQuiz] = useState(false);
  const [showQuizButton, setShowQuizButton] = useState(false); // Show quiz button ke liye state
@@ -84,13 +86,11 @@ const generateNotesAndQuiz = async () => {
   };
 
   const handleQuizCompletion = (result) => {
-    console.log('Quiz Completed!', result);
-    // You can show the result or store it in the backend
+
   };
 
   const submitQuizResult = async (result) => {
-    console.log('Quiz Result Submitted!', result);
-    // Add API call to submit quiz result to backend
+
   };
   const [settings, setSettings] = useState({
     speechRate: 1,
@@ -153,7 +153,6 @@ const generateNotesAndQuiz = async () => {
   
       recognitionRef.current = recognition;
     } catch (error) {
-      console.error('Failed to initialize speech recognition:', error);
       addMessage('assistant', 'Speech recognition setup failed.');
     }
   
@@ -490,63 +489,194 @@ Format requirements:
     }
   }, [isAdvancedMode, userDetails]);
 
- // Handle form submission with better error handling
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!message.trim() || isTyping) return;
+  // Handle form submission with better error handling
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!message.trim() || isTyping) return;
+  
+    const userMessage = message;
+    addMessage('user', userMessage);
+    setMessage('');
 
-  addMessage('user', message);
-  setMessage('');
-  setIsTyping(true);
-
-  try {
-    // Prepare the complete request body
-    const requestBody = {
-      query: message,
-      subject: userDetails.subject || 'General',
-      course: userDetails.course || 'Unknown Course',
-      classLevel: userDetails.classLevel || '',
-      yearSem: userDetails.yearSem || '',
-      importantTopics: userDetails.importantTopics || '',
-      formatPreference: userDetails.formatPreference || 'bullet-points',
-      advancedMode: isAdvancedMode,
-      userId: "current-user-id"
-    };
-
-    console.log(" Sending request with:", requestBody);
-
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error(" Backend validation errors:", errorData.errors);
-      throw new Error(errorData.errors?.[0]?.msg || 'Request failed');
-    }
-
-    const data = await response.json();
-    console.log(" API Response:", data);
-
-    // Defensive check for notes
-    if (data?.data && typeof data.data === 'string') {
-      addMessage('assistant', data.data);
-    } else {
-      addMessage('assistant', "❗ No notes were returned. Please try again.");
+    // In tutor mode, a regular message is a general query
+    const requestType = isTutorMode ? 'explanation' : '';
+    sendQueryToBackend(userMessage, requestType);
+  };
+  
+  const handleTutorAction = (requestType) => {
+    const topic = userDetails.importantTopics;
+    if (!topic.trim()) {
+      addMessage('assistant', "Please enter a topic in the 'Topic/Query' field first.");
+      return;
     }
     
+    // Make the user message more descriptive
+    const descriptiveRequest = requestType.replace('_', ' ');
+    addMessage('user', `Generate ${descriptiveRequest} for: ${topic}`);
+    sendQueryToBackend(topic, requestType);
+  };
 
-  } catch (error) {
-    addMessage('assistant', ` Error: ${error.message}`);
-    console.error(' API Error Details:', error);
-  } finally {
-    setIsTyping(false);
-  }
-};
+    const sendQueryToBackend = async (query, requestType = '') => {
+
+      setIsTyping(true);
+
+      try {
+
+        let endpoint = `${process.env.REACT_APP_API_URL}/generate`;
+
+        let requestBody;
+
+  
+
+        if (isTutorMode) {
+
+          endpoint = `${process.env.REACT_APP_API_URL}/generate/tutor`;
+
+          
+
+          // Exclude the last message (current user query) from history
+
+          let historyForBackend = chatHistory.slice(0, -1).map(msg => ({
+
+            role: msg.type === 'user' ? 'user' : 'model',
+
+            parts: [{ text: msg.text }]
+
+          }));
+
+          
+
+          // Find the index of the first user message
+
+          const firstUserIndex = historyForBackend.findIndex(msg => msg.role === 'user');
+
+          
+
+          // If a user message is found, slice from there, otherwise send empty history
+
+          if (firstUserIndex !== -1) {
+
+            historyForBackend = historyForBackend.slice(firstUserIndex);
+
+          } else {
+
+            historyForBackend = [];
+
+          }
+
+  
+
+          requestBody = {
+
+            topic: query,
+
+            subject: userDetails.subject || 'General',
+
+            history: historyForBackend,
+
+            requestType: requestType,
+
+            userQuery: query, // The user's most recent message/query
+
+          };
+
+        } else {
+
+          // Prepare the complete request body for notes generation
+
+          requestBody = {
+
+            query: query,
+
+            subject: userDetails.subject || 'General',
+
+            course: userDetails.course || 'Unknown Course',
+
+            classLevel: userDetails.classLevel || '',
+
+            yearSem: userDetails.yearSem || '',
+
+            importantTopics: userDetails.importantTopics || '',
+
+            formatPreference: userDetails.formatPreference || 'bullet-points',
+
+            advancedMode: isAdvancedMode,
+
+            userId: "current-user-id"
+
+          };
+
+        }
+
+    
+
+
+
+    
+
+        const response = await fetch(endpoint, {
+
+          method: 'POST',
+
+          headers: {
+
+            'Content-Type': 'application/json'
+
+          },
+
+          body: JSON.stringify(requestBody)
+
+        });
+
+    
+
+        if (!response.ok) {
+
+          const errorData = await response.json();
+
+          console.error("Backend validation errors:", errorData.errors);
+
+          throw new Error(errorData.error || errorData.errors?.[0]?.msg || 'Request failed');
+
+        }
+
+    
+
+        const data = await response.json();
+
+
+
+    
+
+        // Defensive check for the response data
+
+        if (data?.data && typeof data.data === 'string') {
+
+          addMessage('assistant', data.data);
+
+        } else {
+
+          addMessage('assistant', "❗ I received an empty response. Please try again.");
+
+        }
+
+        
+
+    
+
+      } catch (error) {
+
+        addMessage('assistant', `Error: ${error.message}`);
+
+        console.error('API Error Details:', error);
+
+      } finally {
+
+        setIsTyping(false);
+
+      }
+
+    };
 
 
   // Handle key press (Enter to send)
@@ -939,13 +1069,13 @@ const startListening = () => {
   recognition.maxAlternatives = 1;
 
   recognition.onstart = () => {
-    console.log(" Listening...");
+
   };
 
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
     setAdvancedInput((prev) => prev + ' ' + transcript);
-    console.log(" You said:", transcript);
+
   };
 
   recognition.onerror = (event) => {
@@ -960,7 +1090,7 @@ const startListening = () => {
   };
 
   recognition.onend = () => {
-    console.log(" Mic session ended.");
+
     recognitionInstance = null;
   };
 
@@ -1061,7 +1191,7 @@ const generatePDFWithRetry = async (content, retries = 2) => {
     return new Blob([pdfBytes], { type: 'application/pdf' });
   } catch (error) {
     if (retries > 0) {
-      console.log(`Retrying PDF generation (${retries} attempts left)`);
+
       return generatePDFWithRetry(content, retries - 1);
     }
     throw new Error(`PDF generation failed: ${error.message}`);
@@ -1071,18 +1201,24 @@ const generatePDFWithRetry = async (content, retries = 2) => {
 // DOCX generator example
 
 
-  // Format message with markdown and XSS protection
+  // Format message with markdown, XSS protection, and custom tags
   const formatMessage = useCallback((text) => {
     try {
       // Basic XSS protection
-      const safeText = text
+      let safeText = text
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
       
+      // Custom tag replacements
+      safeText = safeText
+        .replace(/\[TOPIC\](.*?)\[\/TOPIC\]/g, '<div class="ai-topic">$1</div>')
+        .replace(/\[EXAMPLE\](.*?)\[\/EXAMPLE\]/g, '<div class="ai-example">$1</div>')
+        .replace(/\[IMPORTANT\](.*?)\[\/IMPORTANT\]/g, '<div class="ai-important">$1</div>')
+        .replace(/\[QUESTION\](.*?)\[\/QUESTION\]/g, '<div class="ai-question">$1</div>')
+        .replace(/\[FORMULA\](.*?)\[\/FORMULA\]/g, '<div class="ai-formula">$1</div>');
+
+      // Standard markdown replacements
       return safeText
-        .replace(/^# (.*$)/gm, '<h3>$1</h3>')
-        .replace(/^## (.*$)/gm, '<h4>$1</h4>')
-        .replace(/^### (.*$)/gm, '<h5>$1</h5>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/`(.*?)`/g, '<code>$1</code>')
@@ -1124,12 +1260,52 @@ const generatePDFWithRetry = async (content, retries = 2) => {
     }));
   };
 
+  const customStyles = `
+    .ai-topic {
+      color: #1a5f7a; /* Darker Blue */
+      font-weight: bold;
+      font-size: 1.15em;
+      margin-top: 15px;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #a7d7e8;
+      padding-bottom: 4px;
+    }
+    .ai-example {
+      background-color: #e8f5e9; /* Light green */
+      border-left: 4px solid #4CAF50;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 4px;
+    }
+    .ai-important {
+      background-color: #fff3e0; /* Light orange */
+      border-left: 4px solid #ff9800;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 4px;
+    }
+    .ai-question {
+      background-color: #f3e5f5; /* Light purple */
+      border-left: 4px solid #9c27b0;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 4px;
+    }
+    .ai-formula {
+      background-color: #f5f5f5; /* Light gray */
+      border: 1px solid #e0e_e0;
+      padding: 15px;
+      margin: 12px 0;
+      border-radius: 4px;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre-wrap;
+      font-size: 1.05em;
+    }
+  `;
+
   return (
-
-    //for Quiz 
-
-    
-    //previous logic
+    <>
+    <style>{customStyles}</style>
     <div className="ai-assistant-page">
       <div className="container">
         <div className="row">
@@ -1141,195 +1317,234 @@ const generatePDFWithRetry = async (content, retries = 2) => {
               transition={{ duration: 0.5 }}
             >
               <div className="sidebar-header">
-                <h2><i className="fas fa-robot"></i> Quick Notes AI</h2>
-                <div className="mode-toggle">
-                  <span className={!isAdvancedMode ? 'active' : ''}>Basic</span>
-                  <label className="switch">
-                    <input 
-                      type="checkbox" 
-                      checked={isAdvancedMode}
-                      onChange={() => setIsAdvancedMode(!isAdvancedMode)}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                  <span className={isAdvancedMode ? 'active' : ''}>Advanced</span>
+                <h2><i className="fas fa-robot"></i> Quick AI</h2>
+                <div className="mode-toggles">
+                  <div className="mode-toggle">
+                    <span className={!isAdvancedMode ? 'active' : ''}>Basic</span>
+                    <label className="switch">
+                      <input 
+                        type="checkbox" 
+                        checked={isAdvancedMode}
+                        onChange={() => setIsAdvancedMode(!isAdvancedMode)}
+                      />
+                      <span className="slider"></span>
+                    </label>
+                    <span className={isAdvancedMode ? 'active' : ''}>Advanced</span>
+                  </div>
+                  <div className="mode-toggle">
+                    <span className={!isTutorMode ? 'active' : ''}>Notes</span>
+                    <label className="switch">
+                      <input 
+                        type="checkbox" 
+                        checked={isTutorMode}
+                        onChange={() => setIsTutorMode(!isTutorMode)}
+                      />
+                      <span className="slider tutor"></span>
+                    </label>
+                    <span className={isTutorMode ? 'active' : ''}>Tutor</span>
+                  </div>
                 </div>
               </div>
               
               <AnimatePresence>
-  {showDetailsForm ? (
-    <motion.div 
-      className="details-form"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <h3>Enter Your Details</h3>
+                {showDetailsForm ? (
+                  <motion.div 
+                    className="details-form"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h3>Enter Your Details</h3>
       
-      {/* Advanced Input Section - Only shown when advanced mode is on */}
-      {isAdvancedMode && (
-  <motion.div
-    className="advanced-input-container"
-    initial={{ opacity: 0, height: 0 }}
-    animate={{ opacity: 1, height: 'auto' }}
-    exit={{ opacity: 0, height: 0 }}
-    transition={{ duration: 0.3 }}
-  >
-    <div className="form-group full-width">
-      <label>
-        <i className="fas fa-magic"></i> Describe what you need
-        <span className="hint">(I'll auto-fill the form below)</span>
-      </label>
-
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-        <textarea
-          value={advancedInput}
-          onChange={(e) => setAdvancedInput(e.target.value)}
-          placeholder="Example: generate notes of numerical method for BCA 2nd semester"
-          rows={3}
-          style={{ flex: 1 }}
-        />
-        <button
-          type="button"
-          onClick={startListening}
-          className="mic-btn"
-          title="Speak your query"
-        >
-          🎤
-        </button>
-      </div>
-
-      <div className="advanced-actions">
-        <button 
-          type="button" 
-          className="parse-btn"
-          onClick={handleAdvancedParse}
-          disabled={!advancedInput.trim()}
-        >
-          <i className="fas fa-sparkles"></i> Auto-Fill Form
-        </button>
-        <button 
-          type="button" 
-          className="example-btn"
-          onClick={() => setAdvancedInput("generate notes of numerical method for BCA 2nd sem")}
-        >
-          <i className="fas fa-lightbulb"></i> Load Example
-        </button>
-      </div>
-    </div>
-    <div className="divider"></div>
-  </motion.div>
-)}
-
-
-      <div className="form-grid">
-        <div className="form-group">
-          <label>Course/Program*</label>
-          <input
-            type="text"
-            name="course"
-            value={userDetails.course}
-            onChange={handleDetailChange}
-            className={errors.course ? 'error' : ''}
-          />
-          {errors.course && <span className="error-message">{errors.course}</span>}
-        </div>
-        
-        <div className="form-group">
-          <label>Subject*</label>
-          <input
-            type="text"
-            name="subject"
-            value={userDetails.subject}
-            onChange={handleDetailChange}
-            className={errors.subject ? 'error' : ''}
-          />
-          {errors.subject && <span className="error-message">{errors.subject}</span>}
-        </div>        
-        <div className="form-group">
-          <label>Class Level</label>
-          <input
-            type="text"
-            name="classLevel"
-            value={userDetails.classLevel}
-            onChange={handleDetailChange}
-            className={errors.classLevel ? 'error' : ''}
-          />
-          {errors.classLevel && <span className="error-message">{errors.classLevel}</span>}
-        </div>
-        
-        <div className="form-group">
-          <label>Year/Semester (e.g., 2nd/4th)</label>
-          <input
-            type="text"
-            name="yearSem"
-            value={userDetails.yearSem}
-            onChange={handleDetailChange}
-            className={errors.yearSem ? 'error' : ''}
-            placeholder="e.g., 2nd/4th"
-          />
-          {errors.yearSem && <span className="error-message">{errors.yearSem}</span>}
-        </div>
-        
-        <div className="form-group full-width">
-          <label>Important Topics (comma separated)</label>
-          <textarea
-            name="importantTopics"
-            value={userDetails.importantTopics}
-            onChange={handleDetailChange}
-            placeholder="e.g., Calculus, Thermodynamics, Organic Chemistry"
-          />
-        </div>
-        
-        <div className="form-group full-width">
-          <label>Format Preference</label>
-          <select
-            name="formatPreference"
-            value={userDetails.formatPreference}
-            onChange={handleDetailChange}
-          >
-            <option value="bullet-points">Bullet Points</option>
-            <option value="paragraph">Paragraph</option>
-            <option value="outline">Outline</option>
-            <option value="qna">Q&A Format</option>
-          </select>
-        </div>
-      </div>
-                    
-                    <motion.button 
-                      className="submit-details-btn"
-                      onClick={submitUserDetails}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      disabled={Object.values(errors).some(err => err) || 
-                               !userDetails.course || 
-                               !userDetails.subject}
-                    >
-                      Start Note Taking
-                    </motion.button>
-                  </motion.div>
+                    {/* Advanced Input Section - Only shown when advanced mode is on */}
+                    {isAdvancedMode && (
+                      <motion.div
+                        className="advanced-input-container"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="form-group full-width">
+                          <label>
+                            <i className="fas fa-magic"></i> Describe what you need
+                            <span className="hint">(I'll auto-fill the form below)</span>
+                          </label>
+      
+                          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                            <textarea
+                              value={advancedInput}
+                              onChange={(e) => setAdvancedInput(e.target.value)}
+                              placeholder="Example: generate notes of numerical method for BCA 2nd semester"
+                              rows={3}
+                              style={{ flex: 1 }}
+                            />
+                            <button
+                              type="button"
+                              onClick={startListening}
+                              className="mic-btn"
+                              title="Speak your query"
+                            >
+                              🎤
+                            </button>
+                          </div>
+      
+                          <div className="advanced-actions">
+                            <button 
+                              type="button" 
+                              className="parse-btn"
+                              onClick={handleAdvancedParse}
+                              disabled={!advancedInput.trim()}
+                            >
+                              <i className="fas fa-sparkles"></i> Auto-Fill Form
+                            </button>
+                            <button 
+                              type="button" 
+                              className="example-btn"
+                              onClick={() => setAdvancedInput("generate notes of numerical method for BCA 2nd sem")}
+                            >
+                              <i className="fas fa-lightbulb"></i> Load Example
+                            </button>
+                          </div>
+                        </div>
+                        <div className="divider"></div>
+                      </motion.div>
+                    )}
+      
+      
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Course/Program*</label>
+                        <input
+                          type="text"
+                          name="course"
+                          value={userDetails.course}
+                          onChange={handleDetailChange}
+                          className={errors.course ? 'error' : ''}
+                        />
+                        {errors.course && <span className="error-message">{errors.course}</span>}
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Subject*</label>
+                        <input
+                          type="text"
+                          name="subject"
+                          value={userDetails.subject}
+                          onChange={handleDetailChange}
+                          className={errors.subject ? 'error' : ''}
+                        />
+                        {errors.subject && <span className="error-message">{errors.subject}</span>}
+                      </div>        
+                      <div className="form-group">
+                        <label>Class Level</label>
+                        <input
+                          type="text"
+                          name="classLevel"
+                          value={userDetails.classLevel}
+                          onChange={handleDetailChange}
+                          className={errors.classLevel ? 'error' : ''}
+                        />
+                        {errors.classLevel && <span className="error-message">{errors.classLevel}</span>}
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Year/Semester (e.g., 2nd/4th)</label>
+                        <input
+                          type="text"
+                          name="yearSem"
+                          value={userDetails.yearSem}
+                          onChange={handleDetailChange}
+                          className={errors.yearSem ? 'error' : ''}
+                          placeholder="e.g., 2nd/4th"
+                        />
+                        {errors.yearSem && <span className="error-message">{errors.yearSem}</span>}
+                      </div>
+                      
+                      <div className="form-group full-width">
+                        <label>Topic/Query</label>
+                        <textarea
+                          name="importantTopics"
+                          value={userDetails.importantTopics}
+                          onChange={handleDetailChange}
+                          placeholder="e.g., What is photosynthesis?"
+                        />
+                      </div>
+                      
+                      {!isTutorMode && <div className="form-group full-width">
+                        <label>Format Preference</label>
+                        <select
+                          name="formatPreference"
+                          value={userDetails.formatPreference}
+                          onChange={handleDetailChange}
+                        >
+                          <option value="bullet-points">Bullet Points</option>
+                          <option value="paragraph">Paragraph</option>
+                          <option value="outline">Outline</option>
+                          <option value="qna">Q&A Format</option>
+                        </select>
+                      </div>}
+                    </div>
+                                  
+                                  <motion.button 
+                                    className="submit-details-btn"
+                                    onClick={submitUserDetails}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    disabled={Object.values(errors).some(err => err) || 
+                                             !userDetails.course || 
+                                             !userDetails.subject}
+                                  >
+                                    Start Session
+                                  </motion.button>
+                                </motion.div>
                 ) : (
                   <>
-                    <motion.div 
-                      className="quick-actions"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <h3>Quick Prompts</h3>
-                      <div className="action-buttons">
-                        <button onClick={() => setMessage(`Explain key concepts in ${userDetails.subject}`)}>
-                          <i className="fas fa-lightbulb"></i> Key Concepts
-                        </button>
-                        <button onClick={() => setMessage(`Create summary of ${userDetails.subject} syllabus`)}>
-                          <i className="fas fa-book"></i> Syllabus Summary
-                        </button>
-                        <button onClick={() => setMessage(`Important formulas in ${userDetails.subject}`)}>
-                          <i className="fas fa-square-root-alt"></i> Formulas
-                        </button>
-                      </div>
-                    </motion.div>
+                    {isTutorMode ? (
+                      <motion.div 
+                        className="quick-actions"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        <h3>Tutor Actions</h3>
+                        <div className="action-buttons">
+                          <button onClick={() => handleTutorAction('key_concepts')}>
+                            <i className="fas fa-lightbulb"></i> Key Concepts
+                          </button>
+                          <button onClick={() => handleTutorAction('summary')}>
+                            <i className="fas fa-book"></i> Summary
+                          </button>
+                          <button onClick={() => handleTutorAction('formulas')}>
+                            <i className="fas fa-square-root-alt"></i> Formulas
+                          </button>
+                          <button onClick={() => handleTutorAction('exam_prep')}>
+                            <i className="fas fa-graduation-cap"></i> Exam Prep
+                          </button>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div 
+                        className="quick-actions"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        <h3>Quick Prompts</h3>
+                        <div className="action-buttons">
+                          <button onClick={() => setMessage(`Explain key concepts in ${userDetails.subject}`)}>
+                            <i className="fas fa-lightbulb"></i> Key Concepts
+                          </button>
+                          <button onClick={() => setMessage(`Create summary of ${userDetails.subject} syllabus`)}>
+                            <i className="fas fa-book"></i> Syllabus Summary
+                          </button>
+                          <button onClick={() => setMessage(`Important formulas in ${userDetails.subject}`)}>
+                            <i className="fas fa-square-root-alt"></i> Formulas
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
                     
                     <motion.div 
                       className="download-section"
@@ -1396,46 +1611,48 @@ const generatePDFWithRetry = async (content, retries = 2) => {
                   </div>
                 </div>
                 <div className="chat-actions">
-                  <motion.button 
-                    className="action-btn"
-                    onClick={toggleSpeak}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    title={isSpeaking ? 'Stop speaking' : 'Read aloud'}
-                  >
-                    <i className={`fas ${isSpeaking ? 'fa-stop' : 'fa-volume-up'}`}></i>
-                  </motion.button>
-                  
-                  <motion.button 
-                    className="action-btn"
-                    onClick={toggleListening}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    title={isListening ? 'Stop listening' : 'Voice input'}
-                  >
-                    <i className={`fas ${isListening ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
-                  </motion.button>
-                  
-                  <motion.button 
-                    className="action-btn"
-                    onClick={() => setShowSettings(!showSettings)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    title="Settings"
-                  >
-                    <i className="fas fa-cog"></i>
-                  </motion.button>
-                  
                   {!showDetailsForm && (
-                    <motion.button 
-                      className="action-btn"
-                      onClick={() => setShowDetailsForm(true)}
-                      whileHover={{ rotate: 15 }}
-                      whileTap={{ scale: 0.9 }}
-                      title="Edit Details"
-                    >
-                      <i className="fas fa-user-edit"></i>
-                    </motion.button>
+                    <>
+                      <motion.button 
+                        className="action-btn"
+                        onClick={toggleSpeak}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        title={isSpeaking ? 'Stop speaking' : 'Read aloud'}
+                      >
+                        <i className={`fas ${isSpeaking ? 'fa-stop' : 'fa-volume-up'}`}></i>
+                      </motion.button>
+                      
+                      <motion.button 
+                        className="action-btn"
+                        onClick={toggleListening}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        title={isListening ? 'Stop listening' : 'Voice input'}
+                      >
+                        <i className={`fas ${isListening ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
+                      </motion.button>
+                      
+                      <motion.button 
+                        className="action-btn"
+                        onClick={() => setShowSettings(!showSettings)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        title="Settings"
+                      >
+                        <i className="fas fa-cog"></i>
+                      </motion.button>
+                      
+                      <motion.button 
+                        className="action-btn"
+                        onClick={() => setShowDetailsForm(true)}
+                        whileHover={{ rotate: 15 }}
+                        whileTap={{ scale: 0.9 }}
+                        title="Edit Details"
+                      >
+                        <i className="fas fa-user-edit"></i>
+                      </motion.button>
+                    </>
                   )}
                 </div>
               </div>
@@ -1561,10 +1778,7 @@ const generatePDFWithRetry = async (content, retries = 2) => {
                             Start Quiz
                           </motion.div>
                         )}
-                      
-
-
-                            
+                       
                             <div className="message-timestamp">
                               {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
@@ -1637,7 +1851,7 @@ const generatePDFWithRetry = async (content, retries = 2) => {
                       placeholder={`Ask me anything about ${userDetails.subject}...`}
                       disabled={isTyping}
                     />
-                    <motion.button 
+                    <motion.button                                                                                                                                                                                   
                       type="submit" 
                       className="send-btn"
                       disabled={!message.trim() || isTyping}
@@ -1662,6 +1876,7 @@ const generatePDFWithRetry = async (content, retries = 2) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

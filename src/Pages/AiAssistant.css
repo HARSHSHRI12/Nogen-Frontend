@@ -29,7 +29,14 @@
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
-  height: 100%;
+  /* Removed height: 100% to prevent excessive stretching */
+  position: sticky; /* Make it sticky */
+  top: 20px; /* Stick to the top, considering page padding */
+  max-height: calc(100vh - 40px); /* Max height relative to viewport, minus page padding */
+  overflow-y: auto; /* Enable vertical scrolling for sidebar content */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {

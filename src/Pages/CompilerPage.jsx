@@ -22,7 +22,7 @@ function CompilerPage() {
   return arr;
 }
 
-console.log(reverseArray([1, 2, 3]));`,
+reverseArray([1, 2, 3]);`,
         },
         testCases: [
           { input: "[1, 2, 3]", expected: "[3, 2, 1]" },

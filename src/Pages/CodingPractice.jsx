@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import CodeEditor from '../components/CodeEditor';
-import QuestionDetails from '../components/QuestionList';  // Fixed typo from QuestionList to QuestionDetails
-import Output from '../components/Output';
-import { generateMockQuestions } from '../components/mockQuestions'; // Importing the mock data
+import QuestionDetails from '../components/QuestionDetails';
+import { generateMockQuestions } from '../components/mockQuestions';
 import './CodingPractice.css';
 
 const CodePractice = () => {
@@ -10,17 +10,7 @@ const CodePractice = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [filter, setFilter] = useState('all');
   const [topicFilter, setTopicFilter] = useState('all');
-  const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('javascript');
-  const [output, setOutput] = useState('');
-  const [isRunning, setIsRunning] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [progress, setProgress] = useState({
-    easy: { solved: 0, total: 0 },
-    medium: { solved: 0, total: 0 },
-    hard: { solved: 0, total: 0 },
-  });
+  const [executionOutput, setExecutionOutput] = useState('');
 
   const topics = [
     'Array', 'String', 'Linked List', 'Stack', 'Queue', 
@@ -31,33 +21,12 @@ const CodePractice = () => {
   ];
 
   useEffect(() => {
-    const mockQuestions = generateMockQuestions(); // Fetch the questions
+    const mockQuestions = generateMockQuestions();
     setQuestions(mockQuestions);
-
-    // Count how many questions are there per difficulty
-    const easyCount = mockQuestions.filter(q => q.difficulty === 'easy').length;
-    const mediumCount = mockQuestions.filter(q => q.difficulty === 'medium').length;
-    const hardCount = mockQuestions.filter(q => q.difficulty === 'hard').length;
-
-    setProgress({
-      easy: { solved: 0, total: easyCount },
-      medium: { solved: 0, total: mediumCount },
-      hard: { solved: 0, total: hardCount },
-    });
+    if (mockQuestions.length > 0) {
+      setCurrentQuestion(mockQuestions[0]);
+    }
   }, []);
-
-  useEffect(() => {
-    if (questions.length > 0 && !currentQuestion) {
-      setCurrentQuestion(questions[0]);
-      setCode(questions[0].boilerplate[language] || '');
-    }
-  }, [questions, currentQuestion, language]);
-
-  useEffect(() => {
-    if (currentQuestion) {
-      setCode(currentQuestion.boilerplate[language] || '');
-    }
-  }, [language, currentQuestion]);
 
   const filteredQuestions = questions.filter(q => {
     const matchesDifficulty = filter === 'all' || q.difficulty === filter;
@@ -67,114 +36,79 @@ const CodePractice = () => {
 
   const handleQuestionSelect = (question) => {
     setCurrentQuestion(question);
-    setOutput('');
-  };
-
-  const handleRun = () => {
-    setIsRunning(true);
-    setOutput('Running test cases...\n\n');
-
-    setTimeout(() => {
-      let outputText = 'Running test cases...\n\n';
-      currentQuestion.testCases.forEach((testCase, index) => {
-        const randomSuccess = Math.random() > 0.3;
-        outputText += `Test Case ${index + 1}: ${randomSuccess ? '✓ Passed' : '✗ Failed'}\n`;
-        outputText += `Input: ${testCase.input}\n`;
-        outputText += `Expected Output: ${testCase.output}\n`;
-        if (!randomSuccess) {
-          outputText += `Your Output: [Wrong output]\n`;
-        }
-        outputText += '\n';
-      });
-
-      const allPassed = Math.random() > 0.3;
-      outputText += allPassed ? '\nAll test cases passed!' : '\nSome test cases failed.';
-
-      setOutput(outputText);
-      setIsRunning(false);
-    }, 1500);
-  };
-
-  const handleSubmit = () => {
-    setIsSubmitting(true);
-    setOutput('Submitting solution...\n\n');
-
-    setTimeout(() => {
-      const randomSuccess = Math.random() > 0.5;
-      let outputText = 'Submitting solution...\n\n';
-
-      if (randomSuccess) {
-        outputText += '✓ Solution Accepted!\n';
-        outputText += `Runtime: ${(Math.random() * 100).toFixed(2)} ms\n`;
-        outputText += `Memory: ${(Math.random() * 50).toFixed(2)} MB\n`;
-
-        if (currentQuestion && !currentQuestion.solved) {
-          const difficulty = currentQuestion.difficulty;
-          setProgress(prev => ({
-            ...prev,
-            [difficulty]: {
-              ...prev[difficulty],
-              solved: prev[difficulty].solved + 1,
-            },
-          }));
-          currentQuestion.solved = true;
-        }
-      } else {
-        outputText += '✗ Solution Rejected. Try again.';
-      }
-
-      setOutput(outputText);
-      setIsSubmitting(false);
-    }, 1500);
+    setExecutionOutput('');
   };
 
   return (
-    <div className="code-practice-container">
-      <h1>Code Practice</h1>
-
-      <div className="filters">
-        <label>Difficulty:</label>
-        <select onChange={(e) => setFilter(e.target.value)}>
-          <option value="all">All</option>
-          <option value="easy">Easy</option>
-          <option value="medium">Medium</option>
-          <option value="hard">Hard</option>
-        </select>
-
-        <label>Topic:</label>
-        <select onChange={(e) => setTopicFilter(e.target.value)}>
-          <option value="all">All</option>
-          {topics.map((t, i) => <option key={i} value={t}>{t}</option>)}
-        </select>
-      </div>
+    <motion.div 
+      className="code-practice-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <header className="practice-header">
+        <h1>Code Practice</h1>
+        <div className="filters">
+          <div className="filter-group">
+            <label htmlFor="difficulty-filter">Difficulty:</label>
+            <select id="difficulty-filter" onChange={(e) => setFilter(e.target.value)} value={filter}>
+              <option value="all">All</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="topic-filter">Topic:</label>
+            <select id="topic-filter" onChange={(e) => setTopicFilter(e.target.value)} value={topicFilter}>
+              <option value="all">All</option>
+              {topics.map((t, i) => <option key={i} value={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+      </header>
 
       <div className="main-layout">
-        <div className="question-list">
-          <h3>Questions</h3>
-          <ul>
-            {filteredQuestions.map((q, idx) => (
-              <li key={idx} onClick={() => handleQuestionSelect(q)}>
-                {q.title} ({q.difficulty})
+        <motion.div className="layout-panel questions-panel" layout>
+          <div className="panel-header">
+            <h3>Questions</h3>
+          </div>
+          <ul className="question-list">
+            {filteredQuestions.map((q) => (
+              <li 
+                key={q.title} 
+                onClick={() => handleQuestionSelect(q)}
+                className={currentQuestion?.title === q.title ? 'active' : ''}
+              >
+                <span>{q.title}</span>
+                <span className={`difficulty-tag ${q.difficulty}`}>{q.difficulty}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </motion.div>
 
-        <div className="code-area">
+        <div className="layout-panel editor-panel">
           {currentQuestion && (
             <>
-              <QuestionDetails question={currentQuestion} />
-              <CodeEditor setLanguage={setLanguage} setCode={setCode} />
-              <div className="actions">
-                <button onClick={handleRun} disabled={isRunning}>Run</button>
-                <button onClick={handleSubmit} disabled={isSubmitting}>Submit</button>
-              </div>
-              <Output result={output} />
+              <motion.div className="panel-header" layout>
+                <QuestionDetails question={currentQuestion} />
+              </motion.div>
+              <CodeEditor 
+                question={currentQuestion} 
+                setExecutionOutput={setExecutionOutput} 
+              />
             </>
           )}
         </div>
+
+        <div className="layout-panel output-panel">
+          <div className="panel-header">
+            <h3>Output</h3>
+          </div>
+          <pre className="output-console">{executionOutput}</pre>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

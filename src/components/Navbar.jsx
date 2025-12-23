@@ -1,24 +1,17 @@
-// same imports
 import { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import './Navbar.css'
-
+import { useAuth } from '../context/AuthContext'
+import NotificationDropdown from './NotificationDropdown'
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [role, setRole] = useState(null)
-  const [user, setUser] = useState({
-    name: localStorage.getItem('name'),
-    email: localStorage.getItem('email'),
-    bio: localStorage.getItem('bio'),
-    image: localStorage.getItem('image'), // base64 or url
-  })
-
+  const { user } = useAuth();
   const location = useLocation()
-  const navigate = useNavigate()
   
+  const homePath = user ? (user.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard') : '/';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,11 +19,6 @@ const Navbar = () => {
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  useEffect(() => {
-    const storedRole = localStorage.getItem('role')
-    setRole(storedRole)
   }, [])
 
   const navVariants = {
@@ -54,20 +42,12 @@ const Navbar = () => {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.clear()
-    setRole(null)
-    navigate('/')
-    window.location.reload()
-    setUser(null)
-  }
-
   return (
     <motion.nav className={`navbar ${scrolled ? 'scrolled' : ''}`} initial="hidden" animate="visible" variants={navVariants}>
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo">
+        <Link to={homePath} className="navbar-logo">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <i className="fas fa-brain"></i> QuickNotes <span>AI</span>
+            <i className="fas fa-brain"></i> Nogen <span>AI</span>
           </motion.div>
         </Link>
 
@@ -80,7 +60,7 @@ const Navbar = () => {
         <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
           <li className="nav-item">
             <motion.div whileHover="hover" variants={linkVariants}>
-              <Link to="/" className={location.pathname === '/' ? 'nav-link active' : 'nav-link'}>
+              <Link to={homePath} className={['/', '/student-dashboard', '/teacher-dashboard'].includes(location.pathname) ? 'nav-link active' : 'nav-link'}>
                 <i className="fas fa-home"></i> Home
               </Link>
             </motion.div>
@@ -94,7 +74,7 @@ const Navbar = () => {
             </motion.div>
           </li>
 
-          {(role === 'student' || !role) && (
+          {(user?.role === 'student' || !user) && (
             <li className="nav-item">
               <motion.div whileHover="hover" variants={linkVariants}>
                 <Link to="/ecoin" className={location.pathname === '/ecoin' ? 'nav-link active' : 'nav-link'}>
@@ -120,7 +100,7 @@ const Navbar = () => {
             </motion.div>
           </li>
 
-          {role === 'teacher' && (
+          {user?.role === 'teacher' && (
             <li className="nav-item">
               <motion.div whileHover="hover" variants={linkVariants}>
                 <Link to="/teacher-syllabus" className={location.pathname === '/teacher-syllabus' ? 'nav-link active' : 'nav-link'}>
@@ -130,27 +110,22 @@ const Navbar = () => {
             </li>
           )}
 
-          {role ? (
+          {user ? (
             <>
               <li className="nav-item profile-info">
                 <motion.div whileHover="hover" variants={linkVariants}>
                   <Link to="/profile" className={location.pathname === '/profile' ? 'nav-link active' : 'nav-link'}>
                     <img
-                      src={user?.image || 'https://via.placeholder.com/30'}
+                      src={user?.profilePic || 'https://via.placeholder.com/30'}
                       alt="Profile"
-                      style={{ width: '30px', borderRadius: '50%', marginRight: '8px' }}
+                      style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '50%', marginRight: '8px' }}
                     />
                     {user?.name || 'Profile'}
                   </Link>
                 </motion.div>
               </li>
-
-              <li className="nav-item">
-                <motion.div whileHover="hover" variants={linkVariants}>
-                  <span onClick={handleLogout} className="nav-link" style={{ cursor: 'pointer' }}>
-                    <i className="fas fa-sign-out-alt"></i> Logout
-                  </span>
-                </motion.div>
+              <li className="nav-item notification-item">
+                <NotificationDropdown user={user} />
               </li>
             </>
           ) : (

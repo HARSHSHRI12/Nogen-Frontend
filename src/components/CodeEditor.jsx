@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
-import axios from "axios";
+import axiosInstance from "../api/axios";
 
-const CodeEditor = ({ question }) => {
+const CodeEditor = ({ question, setExecutionOutput }) => {
   const [code, setCode] = useState("");
-  const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
@@ -21,22 +20,29 @@ const CodeEditor = ({ question }) => {
 
   const handleRun = async () => {
     if (!code.trim()) {
-      setOutput("⚠️ Please write some code first.");
+      setExecutionOutput("⚠️ Please write some code first.");
       return;
     }
 
     setIsRunning(true);
-    setOutput(""); // clear previous output
+    setExecutionOutput("Running..."); // clear previous output
 
     try {
-      const response = await axios.post("http://localhost:3500/api/run-code", {
+      const response = await axiosInstance.post("/run-code", {
         language: "javascript",
         code,
       });
-      setOutput(response.data?.result || "✅ Code executed successfully (No output)");
+
+      if (response.data.success) {
+        const result = response.data.result;
+        const outputString = `Status: ${result.status}\nOutput: ${result.output}\nExecution Time: ${result.executionTime}`;
+        setExecutionOutput(outputString);
+      } else {
+        setExecutionOutput(`❌ Error: ${response.data.error}`);
+      }
     } catch (error) {
       const err = error.response?.data?.error || error.message;
-      setOutput("❌ Error: " + err);
+      setExecutionOutput("❌ Error: " + err);
     } finally {
       setIsRunning(false);
     }
@@ -44,9 +50,6 @@ const CodeEditor = ({ question }) => {
 
   return (
     <div className="code-editor-container">
-      <h3>{question?.title || "Untitled Question"}</h3>
-      <p>{question?.description || "No description provided."}</p>
-
       <Editor
         height="400px"
         language="javascript"
@@ -65,13 +68,9 @@ const CodeEditor = ({ question }) => {
           {isRunning ? "Running..." : "Run Code"}
         </button>
       </div>
-
-      <div className="output" style={{ marginTop: "15px" }}>
-        <h4>Output:</h4>
-        <pre>{output}</pre>
-      </div>
     </div>
   );
 };
 
 export default CodeEditor;
+
