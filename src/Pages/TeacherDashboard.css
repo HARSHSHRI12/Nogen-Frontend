@@ -1,74 +1,130 @@
+/* TeacherDashboard.css */
+:root {
+  --teacher-gradient: linear-gradient(135deg, #FF512F 0%, #DD2476 100%);
+  --teacher-accent: #FF512F;
+}
+
 .teacher-dashboard {
-  padding: 2rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   min-height: 100vh;
-  font-family: 'Poppins', sans-serif;
+  padding: 2rem;
+  background: #1a1a2e;
+  /* Slightly different dark bg for teacher */
+  background: -webkit-linear-gradient(to right, #1a1a2e, #16213e, #1a1a2e);
+  background: linear-gradient(to right, #1a1a2e, #16213e, #1a1a2e);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
 }
 
+/* Reusing similar classes but with teacher accent colors */
 .dashboard-header {
-  text-align: center;
   margin-bottom: 3rem;
-  color: #343a40;
+  text-align: center;
 }
 
-.dashboard-header h1 {
+.welcome-banner h1 {
   font-size: 2.5rem;
-  font-weight: 600;
   margin-bottom: 0.5rem;
+  background: linear-gradient(to right, #fff, #ff9a9e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-banner p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+}
+
+.dashboard-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stat-card {
+  display: flex !important;
+  align-items: center;
+  gap: 1.5rem;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.stat-icon-wrapper {
+  background: rgba(221, 36, 118, 0.2);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  font-size: 1.5rem;
+  color: #ff9a9e;
+  border: 1px solid rgba(221, 36, 118, 0.4);
 }
 
-.dashboard-header p {
-  font-size: 1.1rem;
-  color: #495057;
+.stat-card h3 {
+  font-size: 1.8rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.stat-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+.section-heading {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0.5rem;
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.feature-card-container {
-  perspective: 1000px;
-}
-
-.feature-card {
-  background: white;
-  border-radius: 15px;
-  padding: 2rem;
+.feature-card-glass {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  height: 200px;
   text-align: center;
-  color: #343a40;
-  text-decoration: none;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  will-change: transform;
-  display: block;
-  border-left: 5px solid #17a2b8;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03) !important;
 }
 
-.feature-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+.feature-card-glass:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-.feature-icon {
+.feature-icon-glass {
   font-size: 3rem;
-  color: #17a2b8;
-  margin-bottom: 1rem;
+  color: #ff9a9e;
   transition: transform 0.3s ease;
 }
 
-.feature-card:hover .feature-icon {
-  transform: scale(1.1) rotate(-5deg);
+.feature-card-glass:hover .feature-icon-glass {
+  transform: scale(1.1) rotate(5deg);
+  color: #fff;
 }
 
-.feature-name {
+.feature-name-glass {
   font-size: 1.25rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: #fff;
 }

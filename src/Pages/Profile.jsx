@@ -1,47 +1,68 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import axiosInstance from "../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiEdit, FiSave, FiX, FiLogOut, FiLinkedin, FiGithub, FiUser, FiBriefcase, FiTarget, FiCamera, FiUpload, FiSettings } from "react-icons/fi";
+import {
+  FiEdit, FiSave, FiX, FiLinkedin, FiGithub,
+  FiUser, FiBriefcase, FiTarget, FiCamera, FiUpload,
+  FiSettings, FiActivity, FiMapPin, FiMail, FiAlertCircle
+} from "react-icons/fi";
 import { FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
 import "./Profile.css";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ProfileSettingsTab from './ProfileSettingsTab';
+import GlassCard from "../components/common/GlassCard";
+import AnimatedButton from "../components/common/AnimatedButton";
 
 const Profile = () => {
-  const { user, logout, updateUser, isAuthenticated } = useAuth(); // Added isAuthenticated
+  const { user, logout, updateUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
-  const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({});
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('about');
-  
-  // New state for image upload
+
+  // Image Upload State
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewSource, setPreviewSource] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  // No longer need getToken, as tokens are HTTP-only cookies handled by the browser
-  // and sent automatically by axios with withCredentials: true.
-
+  // Fetch Profile
   const fetchProfile = useCallback(async () => {
-    
-    // Check if user exists in auth context
-    if (!isAuthenticated) { // Use isAuthenticated from context
+    if (!isAuthenticated) {
       navigate("/login");
       return;
     }
-
     try {
-      // No need to manually add Authorization header, axios with withCredentials handles HTTP-only cookies
+      // Prioritize profile route: this endpoint should return the unified profile object
       const response = await axiosInstance.get("/profile/me");
-
       const data = response.data;
+
+      // Append timestamp to prevent caching issues
+      if (data.profilePic) {
+        data.profilePic = `${data.profilePic}?t=${new Date().getTime()}`;
+      }
+
       setProfile(data);
+
+      // Update context only if data has changed to avoid infinite loop
+      if (typeof updateUser === 'function' && (
+        user?.name !== data.name ||
+        user?.profilePic !== data.profilePic ||
+        user?.email !== data.email
+      )) {
+        updateUser({
+          name: data.name,
+          profilePic: data.profilePic,
+          email: data.email
+        });
+      }
+
+      // Initialize form data
       setFormData({
         name: data.name || "",
         bio: data.bio || "",
@@ -49,33 +70,36 @@ const Profile = () => {
         goals: data.goals || "",
         linkedIn: data.socialLinks?.linkedIn || "",
         github: data.socialLinks?.github || "",
+        // Add other fields if necessary
       });
     } catch (err) {
-      setError("Failed to fetch profile. Please login again.");
-      // Redirect to login on 401 or other auth-related errors
+      console.error("Profile Fetch Error:", err);
+      // Fallback or specific error handling
+      if (err.response && err.response.status === 404) {
+        // Maybe the user exists but no profile doc?
+        // In a real app, maybe trigger creation or show empty state.
+        setError("Profile not found. Please contact support.");
+      } else {
+        setError("Failed to fetch profile. " + (err.response?.data?.message || err.message));
+      }
       if (err.response && err.response.status === 401) {
-        logout(); // Clear auth context on unauthorized
+        logout();
         navigate("/login");
       }
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, navigate, logout]); // Depend on isAuthenticated and logout
+  }, [isAuthenticated, navigate, logout]);
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]); // Depend on fetchProfile memoized by useCallback
+  }, [fetchProfile]);
 
+  // Handlers
   const handleUpdate = async () => {
     setIsUpdating(true);
     setError(null);
     try {
-      if (!isAuthenticated) {
-        setError("Session expired. Please login again.");
-        navigate("/login");
-        return;
-      }
-
       const updatedData = {
         name: formData.name,
         bio: formData.bio,
@@ -87,16 +111,14 @@ const Profile = () => {
         },
       };
 
-      const res = await axiosInstance.put("/profile", updatedData); // No manual headers
+      // Sending to /profile endpoint which is now the dedicated update route
+      const res = await axiosInstance.put("/profile", updatedData);
       setProfile(res.data);
-      updateUser({ name: res.data.name }); // Update context
+      updateUser({ name: res.data.name });
       setEditMode(false);
     } catch (err) {
       setError("Failed to update profile. " + (err.response?.data?.error || err.message));
-      if (err.response && err.response.status === 401) {
-        logout(); // Clear auth context on unauthorized
-        navigate("/login");
-      }
+
     } finally {
       setIsUpdating(false);
     }
@@ -105,11 +127,6 @@ const Profile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-  
-  const handleLogout = () => {
-      logout();
-      navigate("/login");
   };
 
   const handleFileChange = (e) => {
@@ -133,152 +150,289 @@ const Profile = () => {
     uploadData.append('profilePic', selectedFile);
 
     try {
-      if (!isAuthenticated) {
-        setError("Session expired. Please login again.");
-        navigate("/login");
-        return;
-      }
-
       const res = await axiosInstance.post("/upload/profile-pic", uploadData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          // No manual Authorization header needed
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setProfile(res.data);
-      updateUser({ profilePic: res.data.profilePic }); // Update context
+      const updatedProfile = res.data;
+      // Add timestamp to bypass cache if it's the same URL
+      if (updatedProfile.profilePic) {
+        updatedProfile.profilePic = `${updatedProfile.profilePic}?t=${new Date().getTime()}`;
+      }
+      setProfile(updatedProfile);
+      updateUser({ profilePic: updatedProfile.profilePic });
       setPreviewSource('');
       setSelectedFile(null);
     } catch (err) {
       setError('Image upload failed. ' + (err.response?.data?.error || err.message));
-      if (err.response && err.response.status === 401) {
-        logout(); // Clear auth context on unauthorized
-        navigate("/login");
-      }
     } finally {
       setIsUploading(false);
     }
   };
 
+  if (loading) return <div className="loading-spinner"><div className="spinner-border text-primary" role="status"></div></div>;
 
-  if (loading) return <div className="loading-spinner"></div>;
-  if (error && !profile) return <div className="error-full-page">{error}</div>;
-
-  const role = profile?.role || user?.role || "student"; // Use user from context if profile not loaded
+  const role = profile?.role || user?.role || "student";
   const RoleIcon = role === "teacher" ? FaChalkboardTeacher : FaUserGraduate;
 
   return (
     <div className="profile-container">
-      <motion.div className="profile-grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-        
-        {/* Left Column */}
-        <motion.div className="profile-left" initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2, duration: 0.5 }}>
-          <div className="profile-avatar-section">
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
-            <img src={previewSource || profile?.profilePic || `https://i.pravatar.cc/150?u=${profile?._id}`} alt="Avatar" className="profile-avatar-main" />
-            <button className="avatar-overlay" onClick={() => fileInputRef.current.click()}>
-              <FiCamera />
-            </button>
-            <div className="role-badge-main"><RoleIcon /></div>
-          </div>
-          
+      <div className="profile-header-bg"></div>
+
+      <div className="profile-content-wrapper">
+
+        {/* Full Image Upload Overlay */}
+        <AnimatePresence>
           {previewSource && (
-            <div className="upload-actions">
-              <button className="btn-upload" onClick={handleImageUpload} disabled={isUploading}>
-                {isUploading ? 'Uploading...' : <><FiUpload /> Upload</>}
-              </button>
-              <button className="btn-cancel-upload" onClick={() => setPreviewSource('')}><FiX /></button>
-            </div>
+            <motion.div
+              className="file-upload-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <img src={previewSource} alt="Preview" className="upload-preview" />
+              <div className="flex gap-4">
+                <AnimatedButton onClick={handleImageUpload} disabled={isUploading} variant="primary">
+                  {isUploading ? 'Uploading...' : 'Confirm Upload'}
+                </AnimatedButton>
+                <AnimatedButton onClick={() => { setPreviewSource(''); setSelectedFile(null); }} variant="danger">
+                  Cancel
+                </AnimatedButton>
+              </div>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          <h2 className="profile-name">{profile?.name}</h2>
-          <p className="profile-email">{profile?.email}</p>
-          <div className="profile-stats">
-            <div className="stat-item"><span>12</span> Courses</div>
-            <div className="stat-item"><span>8</span> Quizzes Taken</div>
-            <div className="stat-item"><span>1250</span> E-Coins</div>
-          </div>
-          <div className="profile-actions-main">
-            <button className="btn-edit" onClick={() => setEditMode(!editMode)}><FiEdit /> {editMode ? 'Cancel' : 'Edit Profile'}</button>
-            <button className="btn-settings" onClick={() => setActiveTab('settings')}><FiSettings /> Settings</button>
-            <button className="btn-logout" onClick={handleLogout}><FiLogOut /> Logout</button>
-          </div>
-        </motion.div>
+        <div className="profile-grid-layout">
 
-        {/* Right Column */}
-        <motion.div className="profile-right" initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.4, duration: 0.5 }}>
-          {error && <p className="error-inline">{error}</p>}
-          {editMode ? (
-            <div className="edit-form">
-              <div className="form-group">
-                <label>Name</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange} />
+          {/* Left Column: Identity Card */}
+          <GlassCard className="profile-left-col" delay={0.1}>
+            <div className="profile-card-header">
+              <div className="profile-avatar-container" onClick={() => fileInputRef.current.click()}>
+                <img
+                  src={profile?.profilePic || `https://ui-avatars.com/api/?name=${profile?.name || 'User'}&background=random`}
+                  alt="Profile"
+                  className="profile-avatar"
+                  onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${profile?.name || 'User'}&background=random`; }}
+                />
+                <div className="profile-avatar-overlay">
+                  <FiCamera className="camera-icon" />
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  hidden
+                />
+              </div >
+
+              <div className="profile-identity">
+                <h2>{profile?.name}</h2>
+                <p>{profile?.email}</p>
+                <div className="role-badge">
+                  <RoleIcon /> {role.charAt(0).toUpperCase() + role.slice(1)}
+                </div>
               </div>
-              <div className="form-group">
-                <label>Bio</label>
-                <textarea name="bio" value={formData.bio} onChange={handleChange}></textarea>
+
+              <div className="profile-stats-row">
+                <div className="stat-box">
+                  <span className="stat-value">12</span>
+                  <span className="stat-label">Courses</span>
+                </div>
+                <div className="stat-box">
+                  <span className="stat-value">85%</span>
+                  <span className="stat-label">Avg. Score</span>
+                </div>
+                <div className="stat-box">
+                  <span className="stat-value">1250</span>
+                  <span className="stat-label">XP</span>
+                </div>
               </div>
-              <div className="form-group">
-                <label>Skills (comma-separated)</label>
-                <input type="text" name="skills" value={formData.skills} onChange={handleChange} />
-              </div>
-               <div className="form-group">
-                <label>Goals</label>
-                <textarea name="goals" value={formData.goals} onChange={handleChange}></textarea>
-              </div>
-              <div className="form-group">
-                <label>LinkedIn URL</label>
-                <input type="text" name="linkedIn" value={formData.linkedIn} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>GitHub URL</label>
-                <input type="text" name="github" value={formData.github} onChange={handleChange} />
-              </div>
-              <button className="btn-save" onClick={handleUpdate} disabled={isUpdating}>
-                {isUpdating ? 'Saving...' : <><FiSave /> Save Changes</>}
-              </button>
+            </div >
+
+            <div className="profile-actions-col">
+              {!editMode ? (
+                <AnimatedButton
+                  width="100%"
+                  onClick={() => setEditMode(true)}
+                  icon={<FiEdit />}
+                >
+                  Edit Profile
+                </AnimatedButton>
+              ) : (
+                <AnimatedButton
+                  width="100%"
+                  variant="danger"
+                  onClick={() => { setEditMode(false); setError(null); }}
+                  icon={<FiX />}
+                >
+                  Cancel Editing
+                </AnimatedButton>
+              )}
+
+
             </div>
-          ) : (
-            <>
-              <div className="profile-tabs">
-                <button className={`tab ${activeTab === 'about' ? 'active' : ''}`} onClick={() => setActiveTab('about')}><FiUser /> About</button>
-                <button className={`tab ${activeTab === 'details' ? 'active' : ''}`} onClick={() => setActiveTab('details')}><FiBriefcase /> Details</button>
-                <button className={`tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}><FiSettings /> Settings</button>
-              </div>
-              <AnimatePresence mode="wait">
-                <motion.div key={activeTab} className="tab-content" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -10, opacity: 0 }} transition={{ duration: 0.2 }}>
-                  {activeTab === 'about' && (
-                    <div>
-                      <h4>Bio</h4>
-                      <p>{profile?.bio || "No bio yet."}</p>
+          </GlassCard >
+
+          {/* Right Column: Details & Edit */}
+          < GlassCard className="profile-right-col" delay={0.2} >
+            {error && <div className="error-message"><FiAlertCircle className="inline mr-2" /> {error}</div>}
+
+            {
+              editMode ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="section-title"><FiEdit /> Edit Profile</h3>
+                    <AnimatedButton onClick={handleUpdate} disabled={isUpdating} icon={<FiSave />}>
+                      {isUpdating ? 'Saving...' : 'Save Changes'}
+                    </AnimatedButton>
+                  </div>
+
+                  <div className="edit-form-grid">
+                    <div className="form-field">
+                      <label>Full Name</label>
+                      <input type="text" name="name" value={formData.name} onChange={handleChange} />
                     </div>
-                  )}
-                  {activeTab === 'details' && (
-                    <div>
-                      <h4>Skills</h4>
-                      <div className="skills-list-main">
-                        {profile?.skills?.length > 0 ? profile.skills.map((s, i) => <span key={i} className="skill-tag-main">{s}</span>) : <p>No skills added.</p>}
-                      </div>
-                      <h4 className="mt-4">Goals</h4>
-                      <p>{profile?.goals || "No goals set."}</p>
-                      <h4 className="mt-4">Social Links</h4>
-                      <div className="social-links-main">
-                        {profile?.socialLinks?.linkedIn && <a href={profile.socialLinks.linkedIn} target="_blank" rel="noopener noreferrer"><FiLinkedin /> LinkedIn</a>}
-                        {profile?.socialLinks?.github && <a href={profile.socialLinks.github} target="_blank" rel="noopener noreferrer"><FiGithub /> GitHub</a>}
-                        {!profile?.socialLinks?.linkedIn && !profile?.socialLinks?.github && <p>No social links added.</p>}
-                      </div>
+                    <div className="form-field">
+                      <label>Bio</label>
+                      <textarea name="bio" value={formData.bio} onChange={handleChange} rows="3" />
                     </div>
-                  )}
-                  {activeTab === 'settings' && (
-                    <ProfileSettingsTab />
-                  )}
+                    <div className="form-field full-width">
+                      <label>Skills <small>(comma separated)</small></label>
+                      <input type="text" name="skills" value={formData.skills} onChange={handleChange} />
+                    </div>
+                    <div className="form-field full-width">
+                      <label>Goals</label>
+                      <textarea name="goals" value={formData.goals} onChange={handleChange} rows="2" />
+                    </div>
+                    <div className="form-field">
+                      <label>LinkedIn URL</label>
+                      <input type="text" name="linkedIn" value={formData.linkedIn} onChange={handleChange} placeholder="https://linkedin.com/in/..." />
+                    </div>
+                    <div className="form-field">
+                      <label>GitHub URL</label>
+                      <input type="text" name="github" value={formData.github} onChange={handleChange} placeholder="https://github.com/..." />
+                    </div>
+                  </div>
                 </motion.div>
-              </AnimatePresence>
-            </>
-          )}
-        </motion.div>
-      </motion.div>
-    </div>
+              ) : (
+                <>
+                  <div className="nav-tabs">
+                    <button
+                      className={`nav-tab-btn ${activeTab === 'about' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('about')}
+                    >
+                      About
+                    </button>
+                    <button
+                      className={`nav-tab-btn ${activeTab === 'details' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('details')}
+                    >
+                      Details
+                    </button>
+                    <button
+                      className={`nav-tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('settings')}
+                    >
+                      Settings
+                    </button>
+                  </div>
+
+                  <div className="tab-content-area">
+                    <AnimatePresence mode="wait">
+                      {activeTab === 'about' && (
+                        <motion.div
+                          key="about"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <h4 className="section-title"><FiUser /> Bio</h4>
+                          <p className="text-gray-300 leading-relaxed mb-6">
+                            {profile?.bio || "No bio information available. Click edit to add a bio!"}
+                          </p>
+
+                          <h4 className="section-title"><FiActivity /> Recent Activity</h4>
+                          <div className="info-grid">
+                            <div className="info-item">
+                              <label>Courses Completed</label>
+                              <p>3</p>
+                            </div>
+                            <div className="info-item">
+                              <label>Current Streak</label>
+                              <p>5 Days</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {activeTab === 'details' && (
+                        <motion.div
+                          key="details"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <div className="mb-8">
+                            <h4 className="section-title"><FiTarget /> Skills & Goals</h4>
+                            <div className="skills-tags mb-4">
+                              {profile?.skills?.length > 0 ? (
+                                profile.skills.map((skill, idx) => (
+                                  <span key={idx} className="skill-pill">{skill}</span>
+                                ))
+                              ) : (
+                                <p className="text-gray-400">No skills listed.</p>
+                              )}
+                            </div>
+                            <div className="info-item">
+                              <label>Goals</label>
+                              <p>{profile?.goals || "No goals set yet."}</p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="section-title"><FiBriefcase /> Social Connections</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {profile?.socialLinks?.linkedIn && (
+                                <a href={profile.socialLinks.linkedIn} target="_blank" rel="noopener noreferrer" className="social-link-card">
+                                  <FiLinkedin size={24} /> <span>LinkedIn Profile</span>
+                                </a>
+                              )}
+                              {profile?.socialLinks?.github && (
+                                <a href={profile.socialLinks.github} target="_blank" rel="noopener noreferrer" className="social-link-card">
+                                  <FiGithub size={24} /> <span>GitHub Profile</span>
+                                </a>
+                              )}
+                              {!profile?.socialLinks?.linkedIn && !profile?.socialLinks?.github && (
+                                <p className="text-gray-400">No social links added.</p>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {activeTab === 'settings' && (
+                        <motion.div
+                          key="settings"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <ProfileSettingsTab />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )
+            }
+          </GlassCard >
+        </div >
+      </div >
+    </div >
   );
 };
 

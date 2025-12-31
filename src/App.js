@@ -41,17 +41,18 @@ function App() {
   // Effect to apply settings to the body or root element
   useEffect(() => {
     if (settings) {
-      // Apply theme
-      document.body.classList.remove('theme-light', 'theme-dark');
+      // Apply theme to documentElement for global CSS variables
+      let themeToApply = settings.theme;
+
       if (settings.theme === 'system') {
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.body.classList.add('theme-dark');
-        } else {
-          document.body.classList.add('theme-light');
-        }
-      } else {
-        document.body.classList.add(`theme-${settings.theme}`);
+        themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
+
+      document.documentElement.setAttribute('data-theme', themeToApply);
+
+      // Keep body classes for any legacy CSS
+      document.body.classList.remove('theme-light', 'theme-dark');
+      document.body.classList.add(`theme-${themeToApply}`);
 
       // Apply font size
       document.body.classList.remove('font-small', 'font-medium', 'font-large');

@@ -1,20 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom'; // Not needed as it's a tab now
 
-const SettingsPage = () => {
+const ProfileSettingsTab = () => {
   const { user } = useAuth();
   const { settings, loading, error, updateSettings, fetchSettings, hasLoaded } = useSettings();
   const [localSettings, setLocalSettings] = useState({});
   const [isUpdating, setIsUpdating] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user || (user.role !== 'student' && user.role !== 'teacher')) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
+  // Removed auth redirect here because parent Profile component handles it.
 
   useEffect(() => {
     if (settings) setLocalSettings(settings);
@@ -60,7 +56,7 @@ const SettingsPage = () => {
   };
 
   if (loading && !settings) {
-    return <div className="text-center py-12 text-gray-500">Loading settings...</div>;
+    return <div className="text-center py-12 text-gray-400">Loading settings...</div>;
   }
 
   if (error) {
@@ -71,90 +67,61 @@ const SettingsPage = () => {
   const notifications = currentSettings.notifications || {};
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-2xl">
-        {/* Header */}
-        <h1 className="text-3xl font-semibold text-center mb-12 text-gray-800">
-          User Settings
-        </h1>
+    <div className="settings-glass-form">
+      <h3 className="section-title mb-6">User Preferences</h3>
 
-        {/* Card */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-lg shadow-md border border-gray-200 p-8 space-y-10"
-        >
-          {/* Theme */}
-          <div className="space-y-2">
-            <label htmlFor="theme" className="block text-sm font-medium text-gray-700">
-              Theme
-            </label>
-            <select
-              id="theme"
-              name="theme"
-              value={currentSettings.theme || 'light'}
-              onChange={handleChange}
-              className="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 px-3 py-2"
-            >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="system">System</option>
-            </select>
+      <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* Theme & Appearance */}
+        <div className="info-item mb-4">
+          <h4 className="text-lg font-medium text-white mb-4">Appearance</h4>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-field">
+              <label htmlFor="theme">Theme Mode</label>
+              <select
+                id="theme"
+                name="theme"
+                value={currentSettings.theme || 'light'}
+                onChange={handleChange}
+              >
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="system">System</option>
+              </select>
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="fontSize">Font Size</label>
+              <select
+                id="fontSize"
+                name="fontSize"
+                value={currentSettings.fontSize || 'medium'}
+                onChange={handleChange}
+              >
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
           </div>
+        </div>
 
-          {/* Sound Effects */}
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="soundEffects"
-              name="soundEffects"
-              checked={currentSettings.soundEffects || false}
-              onChange={handleChange}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-            />
-            <label htmlFor="soundEffects" className="text-sm text-gray-700">
-              Enable sound effects
-            </label>
-          </div>
+        {/* Notifications */}
+        <div className="info-item mb-4">
+          <h4 className="text-lg font-medium text-white mb-4">Notifications</h4>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="soundEffects"
+                name="soundEffects"
+                checked={currentSettings.soundEffects || false}
+                onChange={handleChange}
+              />
+              <label htmlFor="soundEffects">Enable Sound Effects</label>
+            </div>
 
-          {/* Text Style */}
-          <div className="space-y-2">
-            <label htmlFor="textStyle" className="block text-sm font-medium text-gray-700">
-              Text Style
-            </label>
-            <select
-              id="textStyle"
-              name="textStyle"
-              value={currentSettings.textStyle || 'default'}
-              onChange={handleChange}
-              className="w-full rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500 px-3 py-2"
-            >
-              <option value="default">Default</option>
-              <option value="serif">Serif</option>
-              <option value="monospace">Monospace</option>
-            </select>
-          </div>
-
-          {/* Font Size */}
-          <div className="space-y-2">
-            <label htmlFor="fontSize" className="block text-sm font-medium text-gray-700">
-              Font Size
-            </label>
-            <select
-              id="fontSize"
-              name="fontSize"
-              value={currentSettings.fontSize || 'medium'}
-              onChange={handleChange}
-              className="w-full rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500 px-3 py-2"
-            >
-              <option value="small">Small</option>
-              <option value="medium">Medium</option>
-              <option value="large">Large</option>
-            </select>
-          </div>
-
-          {/* Notifications */}
-          <div className="space-y-3">
-            <h3 className="text-base font-medium text-gray-800">Notifications</h3>
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
@@ -162,12 +129,10 @@ const SettingsPage = () => {
                 name="notifications.email"
                 checked={notifications.email || false}
                 onChange={handleChange}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
               />
-              <label htmlFor="notifications.email" className="text-sm text-gray-700">
-                Email Notifications
-              </label>
+              <label htmlFor="notifications.email">Email Notifications</label>
             </div>
+
             <div className="flex items-center space-x-3">
               <input
                 type="checkbox"
@@ -175,39 +140,25 @@ const SettingsPage = () => {
                 name="notifications.inApp"
                 checked={notifications.inApp || false}
                 onChange={handleChange}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
               />
-              <label htmlFor="notifications.inApp" className="text-sm text-gray-700">
-                In-App Notifications
-              </label>
+              <label htmlFor="notifications.inApp">In-App Notifications</label>
             </div>
           </div>
+        </div>
 
-          {/* Buttons */}
-          <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={() => fetchSettings()}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md border border-gray-300"
-            >
-              Load Settings
-            </button>
-            <button
-              type="submit"
-              disabled={!user || !user._id || isUpdating}
-              className={`px-4 py-2 rounded-md text-white ${
-                isUpdating
-                  ? 'bg-blue-300 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              {isUpdating ? 'Saving...' : 'Save Settings'}
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* Save Button */}
+        <div className="flex justify-end pt-4 border-t border-gray-700">
+          <button
+            type="submit"
+            disabled={!user || !user._id || isUpdating}
+            className="btn-settings-save"
+          >
+            {isUpdating ? 'Saving...' : 'Save Preferences'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
-export default SettingsPage;
+export default ProfileSettingsTab;

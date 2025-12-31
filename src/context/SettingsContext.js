@@ -6,21 +6,32 @@ export const SettingsContext = createContext();
 
 // Default settings
 const DEFAULT_SETTINGS = {
-  theme: 'light',
+  theme: 'dark',
   fontSize: 'medium',
   textStyle: 'default'
 };
 
 export const SettingsProvider = ({ children }) => {
   const { user } = useAuth();
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+
+  // Initialize from localStorage if available, otherwise use DEFAULT_SETTINGS
+  const getInitialSettings = () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      return { ...DEFAULT_SETTINGS, theme: savedTheme };
+    }
+    return DEFAULT_SETTINGS;
+  };
+
+  const [settings, setSettings] = useState(getInitialSettings);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasLoaded, setHasLoaded] = useState(false);
 
   // Fetch settings only when explicitly called
   const fetchSettings = useCallback(async () => {
-    if (!user || !user.id) {
+    const userId = user?.id || user?._id;
+    if (!user || !userId) {
       setError(new Error('User not authenticated'));
       return false;
     }
@@ -29,7 +40,7 @@ export const SettingsProvider = ({ children }) => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await axiosInstance.get(`/settings/${user.id}`, {
+      const response = await axiosInstance.get(`/settings/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -50,18 +61,26 @@ export const SettingsProvider = ({ children }) => {
   }, [user]);
 
   const updateSettings = useCallback(async (newSettings) => {
-    if (!user || !user.id) {
-      setError(new Error('User not authenticated'));
-      return { success: false, error: 'User not authenticated' };
+    // Optimistic Update: Update local state immediately
+    setSettings(newSettings);
+
+    // Persist to localStorage for anonymous session
+    if (newSettings.theme) {
+      localStorage.setItem('theme', newSettings.theme);
+    }
+
+    const userId = user?.id || user?._id;
+    if (!user || !userId) {
+      // If not logged in, we just stick with local state update
+      return { success: true, settings: newSettings };
     }
 
     setLoading(true);
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      // Send the settings under a `settings` key to match backend expectation
       const response = await axiosInstance.put(
-        `/settings/${user.id}`,
+        `/settings/${userId}`,
         { settings: newSettings },
         {
           headers: {
@@ -70,29 +89,29 @@ export const SettingsProvider = ({ children }) => {
         }
       );
       const data = response.data;
-      // Update local settings with the backend's persisted settings if provided
       const persistedSettings = data?.settings || data?.settings?.settings || newSettings;
+
+      // Sync state with what backend actually saved
       setSettings(persistedSettings);
       return { success: true, settings: persistedSettings };
     } catch (err) {
-      setError(err);
-      // Try to extract server message
-      const message = err?.response?.data?.message || err.message || 'Unknown error';
-      return { success: false, error: message };
+      console.error('Failed to sync settings with backend:', err);
+      // We don't revert state here because local session is still active
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   return (
-    <SettingsContext.Provider 
-      value={{ 
-        settings, 
-        loading, 
-        error, 
-        updateSettings, 
+    <SettingsContext.Provider
+      value={{
+        settings,
+        loading,
+        error,
+        updateSettings,
         fetchSettings,
-        hasLoaded 
+        hasLoaded
       }}
     >
       {children}

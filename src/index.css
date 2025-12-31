@@ -1,185 +1,148 @@
+/* Global CSS Variables and Theme System */
 :root {
-  --primary-color: #4a6bff;
-  --secondary-color: #6c757d;
-  --accent-color: #ff6b6b;
-  --background-color: #f8f9fa;
-  --text-color: #212529;
-  --light-color: #ffffff;
-  --dark-color: #343a40;
+  /* Primary Colors */
+  --primary-blue: #4F46E5;
+  --secondary-cyan: #22D3EE;
+  --success-green: #10B981;
+  --warning-amber: #F59E0B;
+  --error-red: #EF4444;
+
+  /* Theme: Dark (Global Default) */
+  --bg-app: #0B1120;
+  --bg-section: #111827;
+  --bg-card: #1F2933;
+  --text-primary: #E5E7EB;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --border-color: #374151;
+  --navbar-bg: rgba(11, 17, 32, 0.9);
+  --glass-border: rgba(55, 65, 81, 0.5);
+  --button-hover: #6366F1;
   --transition-speed: 0.3s;
-  --border-radius: 8px;
-  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-html, body {
-  height: 100%; /* Ensure html and body take full height */
-  margin: 0;
-  padding: 0;
+/* Theme: Light */
+[data-theme='light'] {
+  --bg-app: #FFFFFF;
+  --bg-section: #F9FAFB;
+  --bg-card: #FFFFFF;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --border-color: #E5E7EB;
+  --navbar-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(229, 231, 235, 0.5);
+  --button-hover: #4338CA;
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--background-color);
-  color: var(--text-color);
-  overflow-y: auto; /* Enable vertical scrolling when content overflows */
-  transition: background-color 0.3s ease, color 0.3s ease, font-size 0.3s ease;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* Theme Classes */
-body.theme-light {
-  --background-color: #f8f9fa;
-  --text-color: #212529;
+html {
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
-
-body.theme-dark {
-  --background-color: #34333b; /* Darker background */
-  --text-color: #e0e0e0; /* Lighter text */
-  --primary-color: #7a9bff; /* Adjust primary for dark theme */
-  --secondary-color: #adb5bd;
-  --dark-color: #f8f9fa; /* Reverse dark/light for elements */
-  --light-color: #343a40;
-}
-
-/* Font Size Classes */
-body.font-small {
-  font-size: 0.875rem; /* 14px */
-}
-
-body.font-medium {
-  font-size: 1rem; /* 16px - default */
-}
-
-body.font-large {
-  font-size: 1.125rem; /* 18px */
-}
-
-/* Text Style Classes */
-body.text-style-default {
-  font-family: 'Poppins', sans-serif;
-}
-
-body.text-style-serif {
-  font-family: 'Georgia', serif;
-}
-
-body.text-style-monospace {
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-}
-
 
 a {
+  color: var(--primary-blue);
   text-decoration: none;
-  color: inherit;
+  transition: color var(--transition-speed);
 }
 
-button {
+a:hover {
+  text-decoration: underline;
+}
+
+[data-theme='dark'] a {
+  color: var(--secondary-cyan);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary);
+  margin-top: 0;
+}
+
+p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
   cursor: pointer;
-}
-
-.page-container {
-  min-height: 100vh;
-  padding: 80px 0;
-}
-
-.section-padding {
-  padding: 80px 0;
-}
-
-.text-primary-custom {
-  color: var(--primary-color);
-}
-
-.bg-primary-custom {
-  background-color: var(--primary-color);
-}
-
-.btn-primary-custom {
-  background-color: var(--primary-color);
-  color: white;
+  transition: all var(--transition-speed);
   border: none;
-  padding: 10px 20px;
-  border-radius: var(--border-radius);
-  transition: all var(--transition-speed);
+  font-size: 0.95rem;
 }
 
-.btn-primary-custom:hover {
-  background-color: #3a5bef;
-  transform: translateY(-2px);
-  box-shadow: var(--box-shadow);
+.btn-primary {
+  background: var(--primary-blue);
+  color: #FFFFFF;
 }
 
-.card-custom {
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  transition: all var(--transition-speed);
+.btn-primary:hover {
+  background: var(--button-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
-.card-custom:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+.btn-secondary {
+  background: #E0E7FF;
+  color: #4F46E5;
 }
 
-/* Animation classes */
-.fade-in {
-  animation: fadeIn 1s ease-in;
+[data-theme='dark'] .btn-secondary {
+  background: #1E293B;
+  color: #22D3EE;
 }
 
-.slide-in-left {
-  animation: slideInLeft 1s ease-out;
+.btn-secondary:hover {
+  filter: brightness(1.1);
 }
 
-.slide-in-right {
-  animation: slideInRight 1s ease-out;
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
 }
 
-.bounce {
-  animation: bounce 1s ease infinite;
+/* Utilities */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
-/* Keyframes */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .section-padding {
-    padding: 50px 0;
-  }
+.text-gradient {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

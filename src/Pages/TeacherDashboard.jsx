@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaPlusSquare, FaTasks, FaClipboardList, FaUserCheck, FaUser, FaChalkboardTeacher } from 'react-icons/fa';
+import GlassCard from '../components/common/GlassCard';
 import './TeacherDashboard.css'; // Assuming you will create this CSS file
 
 const TeacherDashboard = () => {
@@ -34,9 +35,37 @@ const TeacherDashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1><FaChalkboardTeacher /> Welcome, Teacher!</h1>
-        <p>Manage your courses, quizzes, and students from here.</p>
+        <div className="welcome-banner">
+          <h1><FaChalkboardTeacher /> Welcome, Teacher!</h1>
+          <p>Manage your courses, quizzes, and students from here.</p>
+        </div>
       </motion.div>
+
+      <div className="dashboard-stats-row">
+        <GlassCard className="stat-card" delay={0.1}>
+          <div className="stat-icon-wrapper"><FaClipboardList /></div>
+          <div>
+            <h3>5</h3>
+            <p>Active Quizzes</p>
+          </div>
+        </GlassCard>
+        <GlassCard className="stat-card" delay={0.2}>
+          <div className="stat-icon-wrapper"><FaUserCheck /></div>
+          <div>
+            <h3>120</h3>
+            <p>Students Enrolled</p>
+          </div>
+        </GlassCard>
+        <GlassCard className="stat-card" delay={0.3}>
+          <div className="stat-icon-wrapper"><FaTasks /></div>
+          <div>
+            <h3>15</h3>
+            <p>Pending Reviews</p>
+          </div>
+        </GlassCard>
+      </div>
+
+      <h2 className="section-heading">Management Tools</h2>
       <div className="features-grid">
         {features.map((feature, index) => (
           <motion.div
@@ -46,11 +75,12 @@ const TeacherDashboard = () => {
             initial="hidden"
             animate="visible"
             whileHover={{ scale: 1.05 }}
-            className="feature-card-container"
           >
-            <Link to={feature.link} className="feature-card">
-              <div className="feature-icon">{feature.icon}</div>
-              <h3 className="feature-name">{feature.name}</h3>
+            <Link to={feature.link} style={{ textDecoration: 'none' }}>
+              <GlassCard className="feature-card-glass">
+                <div className="feature-icon-glass">{feature.icon}</div>
+                <h3 className="feature-name-glass">{feature.name}</h3>
+              </GlassCard>
             </Link>
           </motion.div>
         ))}
