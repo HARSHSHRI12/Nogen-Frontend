@@ -1,146 +1,174 @@
-import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import './Navbar.css'
-import { useAuth } from '../context/AuthContext'
-import NotificationDropdown from './NotificationDropdown'
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiSun, FiMoon, FiMenu, FiX, FiHome, FiMail, FiCpu, FiCode, FiBook, FiUser, FiLogIn, FiLogOut } from 'react-icons/fi'; // Using feather icons for cleaner look
+import { FaCoins } from 'react-icons/fa'; // Keep FA for specific solid icons if preferred
+import './Navbar.css';
+import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
+import NotificationDropdown from './NotificationDropdown';
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const { user } = useAuth();
-  const location = useLocation()
-  
+  const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { user, logout } = useAuth();
+  const { settings, updateSettings } = useSettings();
+  const location = useLocation();
+
   const homePath = user ? (user.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard') : '/';
+
+  // Theme State
+  const isDarkMode = settings.theme === 'dark';
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
 
-  const navVariants = {
-    hidden: { opacity: 0, y: -50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        duration: 0.5
-      }
-    }
-  }
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const linkVariants = {
-    hover: {
-      scale: 1.1,
-      color: '#4a6bff',
-      transition: { duration: 0.2 }
-    }
-  }
+  const toggleTheme = () => {
+    const newTheme = settings.theme === 'dark' ? 'light' : 'dark';
+    updateSettings({ ...settings, theme: newTheme }).catch(console.error);
+  };
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsOpen(false);
+    setIsProfileOpen(false);
+  }, [location]);
 
   return (
-    <motion.nav className={`navbar ${scrolled ? 'scrolled' : ''}`} initial="hidden" animate="visible" variants={navVariants}>
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-container">
+
+        {/* Logo */}
         <Link to={homePath} className="navbar-logo">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <i className="fas fa-brain"></i> Nogen <span>AI</span>
-          </motion.div>
+          <i className="fas fa-brain"></i>
+          <div>Nogen <span>AI</span></div>
         </Link>
 
-        <div className={`menu-icon ${isOpen ? 'active' : ''}`} onClick={() => setIsOpen(!isOpen)}>
-          <span></span>
-          <span></span>
-          <span></span>
+        {/* Mobile Toggle */}
+        <div className="menu-icon" onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <FiX /> : <FiMenu />}
         </div>
 
+        {/* Menu Items */}
         <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
+
           <li className="nav-item">
-            <motion.div whileHover="hover" variants={linkVariants}>
-              <Link to={homePath} className={['/', '/student-dashboard', '/teacher-dashboard'].includes(location.pathname) ? 'nav-link active' : 'nav-link'}>
-                <i className="fas fa-home"></i> Home
-              </Link>
-            </motion.div>
+            <Link to={homePath} className={`nav-link ${['/', '/student-dashboard', '/teacher-dashboard'].includes(location.pathname) ? 'active' : ''}`}>
+              <FiHome /> Home
+            </Link>
           </li>
 
           <li className="nav-item">
-            <motion.div whileHover="hover" variants={linkVariants}>
-              <Link to="/contact" className={location.pathname === '/contact' ? 'nav-link active' : 'nav-link'}>
-                <i className="fas fa-envelope"></i> Contact
-              </Link>
-            </motion.div>
+            <Link to="/ai-assistant" className={`nav-link ${location.pathname === '/ai-assistant' ? 'active' : ''}`}>
+              <FiCpu /> AI Assistant
+            </Link>
+          </li>
+
+          <li className="nav-item">
+            <Link to="/CodingPractice" className={`nav-link ${location.pathname === '/CodingPractice' ? 'active' : ''}`}>
+              <FiCode /> Code
+            </Link>
           </li>
 
           {(user?.role === 'student' || !user) && (
             <li className="nav-item">
-              <motion.div whileHover="hover" variants={linkVariants}>
-                <Link to="/ecoin" className={location.pathname === '/ecoin' ? 'nav-link active' : 'nav-link'}>
-                  <i className="fas fa-coins"></i> E-Coin
-                </Link>
-              </motion.div>
+              <Link to="/ecoin" className={`nav-link ${location.pathname === '/ecoin' ? 'active' : ''}`}>
+                <FaCoins /> E-Coin
+              </Link>
             </li>
           )}
-
-          <li className="nav-item">
-            <motion.div whileHover="hover" variants={linkVariants}>
-              <Link to="/ai-assistant" className={location.pathname === '/ai-assistant' ? 'nav-link active' : 'nav-link'}>
-                <i className="fas fa-robot"></i> AI Assistant
-              </Link>
-            </motion.div>
-          </li>
-
-          <li className="nav-item">
-            <motion.div whileHover="hover" variants={linkVariants}>
-              <Link to="/CodingPractice" className={location.pathname === '/CodingPractice' ? 'nav-link active' : 'nav-link'}>
-                <i className="fas fa-code"></i> CodingPractice
-              </Link>
-            </motion.div>
-          </li>
 
           {user?.role === 'teacher' && (
             <li className="nav-item">
-              <motion.div whileHover="hover" variants={linkVariants}>
-                <Link to="/teacher-syllabus" className={location.pathname === '/teacher-syllabus' ? 'nav-link active' : 'nav-link'}>
-                  <i className="fas fa-book"></i> Syllabus Manager
-                </Link>
-              </motion.div>
+              <Link to="/teacher-syllabus" className={`nav-link ${location.pathname === '/teacher-syllabus' ? 'active' : ''}`}>
+                <FiBook /> Syllabus
+              </Link>
             </li>
           )}
 
+          <li className="nav-item">
+            <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`}>
+              <FiMail /> Contact
+            </Link>
+          </li>
+
+          {/* Theme Toggle */}
+          <li className="nav-item">
+            <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle Theme">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  style={{ display: 'inline-block' }}
+                  key={isDarkMode ? 'moon' : 'sun'}
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 20, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {isDarkMode ? <FiMoon /> : <FiSun />}
+                </motion.div>
+              </AnimatePresence>
+            </button>
+          </li>
+
+          {/* Auth / Profile */}
           {user ? (
             <>
-              <li className="nav-item profile-info">
-                <motion.div whileHover="hover" variants={linkVariants}>
-                  <Link to="/profile" className={location.pathname === '/profile' ? 'nav-link active' : 'nav-link'}>
-                    <img
-                      src={user?.profilePic || 'https://via.placeholder.com/30'}
-                      alt="Profile"
-                      style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '50%', marginRight: '8px' }}
-                    />
-                    {user?.name || 'Profile'}
-                  </Link>
-                </motion.div>
-              </li>
               <li className="nav-item notification-item">
                 <NotificationDropdown user={user} />
+              </li>
+              <li className="nav-item profile-dropdown-container">
+                <button
+                  className="profile-trigger"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  onBlur={() => setTimeout(() => setIsProfileOpen(false), 200)}
+                >
+                  <img
+                    src={user?.profilePic || user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
+                    alt="User"
+                    className="profile-img-nav"
+                    onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`; }}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div
+                      className="profile-dropdown-menu"
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Link to="/profile" className="dropdown-item">
+                        <FiUser /> Profile
+                      </Link>
+                      <button onClick={logout} className="dropdown-item logout-btn">
+                        <FiLogOut /> Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </li>
             </>
           ) : (
             <li className="nav-item">
-              <motion.div whileHover="hover" variants={linkVariants}>
-                <Link to="/login" className="nav-link">
-                  <i className="fas fa-sign-in-alt"></i> Login
-                </Link>
-              </motion.div>
+              <Link to="/login" className="btn btn-primary" style={{ padding: '0.5rem 1.2rem', color: '#fff', textDecoration: 'none' }}>
+                Login
+              </Link>
             </li>
           )}
+
         </ul>
       </div>
-    </motion.nav>
-  )
-}
+    </nav>
+  );
+};
 
-export default Navbar
+export default Navbar;

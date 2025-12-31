@@ -28,27 +28,27 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-  
+
     // Enhanced client-side validation
     if (!formData.email.trim()) {
       setError("Please enter your email address");
       setLoading(false);
       return;
     }
-  
+
     if (!formData.password.trim()) {
       setError("Please enter your password");
       setLoading(false);
       return;
     }
-  
+
     try {
       // Prepare the request payload
       const payload = {
         email: formData.email.toLowerCase().trim(),
         password: formData.password.trim()
       };
-  
+
       // Make the API call with proper headers and timeout
       const response = await axiosInstance.post(
         '/auth/login',
@@ -57,39 +57,41 @@ const Login = () => {
           timeout: 10000 // 10 second timeout
         }
       );
-  
+
       // Validate response structure (token is sent via HTTP-only cookie, so not in body)
       if (!response.data?.user) {
         throw new Error("Invalid response structure from server: Missing user data");
       }
-  
+
       const { user } = response.data;
-      
+
       // Since tokens are HTTP-only cookies, we don't store them in localStorage/sessionStorage
       // and thus no need to validate token format on the frontend from response body.
       // The presence of 'user' in the response is sufficient for successful login.
 
       // Now update auth context with user
       login(user);
-  
+
       // Determine the redirect path based on user role
       let redirectPath = '/profile'; // Default redirect path
-      if (user.role === 'teacher') {
+      const role = user.role?.toLowerCase();
+
+      if (role === 'teacher') {
         redirectPath = '/teacher-dashboard';
-      } else if (user.role === 'student') {
+      } else if (role === 'student') {
         redirectPath = '/student-dashboard';
       }
-      
+
       // Redirect after setting the role
       navigate(redirectPath, { replace: true });
-  
+
     } catch (err) {
-      
+
       let errorMessage = "Login failed. Please try again.";
-      
+
       if (err.response) {
         // Server responded with error status
-        
+
         if (err.response.data?.errors?.[0]?.msg) {
           errorMessage = err.response.data.errors[0].msg;
         } else if (err.response.status === 400) {
@@ -103,13 +105,13 @@ const Login = () => {
       } else {
         // Something else happened
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <div className="login-page page-container">
@@ -171,7 +173,7 @@ const Login = () => {
                     </div>
 
                     {error && (
-                      <motion.div 
+                      <motion.div
                         className="alert alert-danger"
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -181,7 +183,7 @@ const Login = () => {
                       </motion.div>
                     )}
 
-                    
+
 
                     <form className="login-form" onSubmit={handleSubmit}>
                       <div className="social-login">
@@ -284,8 +286,8 @@ const Login = () => {
 
                       <div className="register-link mt-3">
                         <p className="already-account">
-                        Don't have an account? <Link to="/Signup" className="login-link">Signup here</Link>
-                         </p>
+                          Don't have an account? <Link to="/Signup" className="login-link">Signup here</Link>
+                        </p>
                       </div>
                     </form>
                   </motion.div>

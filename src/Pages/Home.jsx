@@ -1,52 +1,72 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import React, { useEffect,useRef } from "react";
+import React, { useEffect } from "react";
 import './Home.css'
-import NogenVoiceAssistant from "../components/NogenVoiceAssistant"; 
+import NogenVoiceAssistant from "../components/NogenVoiceAssistant";
+
 const Home = () => {
   const navigate = useNavigate();
-  const nogenRef = useRef(null); //  Keeps the same instance on re-renders
 
   useEffect(() => {
     const nogen = new NogenVoiceAssistant();
-    nogen.onNavigate = (path) => navigate(path);  // <-- React navigation!
+    nogen.onNavigate = (path) => navigate(path);
     nogen.start();
-}, []);
+  }, [navigate]);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.8, ease: "easeOut" }
+    }
+  };
+
   return (
     <div className="home-page">
       {/* Hero Section */}
       <section className="hero-section">
         <div className="container">
-          <div className="row align-items-center">
+          <div className="row align-items-center py-5">
             <div className="col-lg-6">
-              <motion.div 
+              <motion.div
                 className="hero-content"
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
               >
-                <h1>Capture Ideas Smarter with <span>AI-Powered</span> Notes</h1>
-                <p>Nogen AI transforms how you take notes with intelligent organization, summarization, and insights - all powered by advanced artificial intelligence.</p>
-                <div className="hero-buttons">
-                  <motion.button 
+                <motion.h1 variants={itemVariants} className="hero-title">
+                  Capture Ideas Smarter with <span className="gradient-text">AI-Powered</span> Notes
+                </motion.h1>
+
+                <motion.p variants={itemVariants} className="hero-description">
+                  Nogen AI transforms how you take notes with intelligent organization,
+                  summarization, and insights - all powered by advanced artificial intelligence.
+                </motion.p>
+
+                <motion.div className="hero-buttons" variants={itemVariants}>
+                  <button
                     className="btn-primary-custom"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    
-                    
+                    onClick={() => navigate('/login')}
                   >
                     Get Started Free <i className="fas fa-arrow-right"></i>
-                  </motion.button>
-                  <motion.button 
-                    className="btn-secondary-custom"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    //add video (make your self ,intro video)
-                  >
+                  </button>
+                  <button className="btn-secondary-custom">
                     <i className="fas fa-play-circle"></i> Watch Demo
-                  </motion.button>
-                </div>
-                <div className="hero-stats">
+                  </button>
+                </motion.div>
+
+                <motion.div className="hero-stats" variants={itemVariants}>
                   <div className="stat-item">
                     <h3>10K+</h3>
                     <p>Active Users</p>
@@ -59,202 +79,208 @@ const Home = () => {
                     <h3>99.9%</h3>
                     <p>Uptime</p>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             </div>
+
             <div className="col-lg-6">
-              <motion.div 
-                className="hero-image"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
+              <motion.div
+                className="hero-image-container"
+                initial={{ opacity: 0, scale: 0.9, rotateY: -15 }}
+                animate={{ opacity: 1, scale: 1, rotateY: -10 }}
+                transition={{ duration: 1.2, delay: 0.4 }}
               >
-                <img src="https://placehold.co/600x400/4a6bff/ffffff?text=QuickNotes+AI" alt="Nogen AI Dashboard" className="img-fluid" />
-                <div className="hero-image-shape"></div>
+                <div className="image-wrapper">
+                  <div className="workspace-badge-shimmer">
+                    <div className="badge-pulse-dot"></div>
+                    <span>Nogen AI Workspace</span>
+                  </div>
+                  <img
+                    src="https://placehold.co/1200x800/1a0b2e/2a1a3e?text="
+                    alt="Nogen AI Dashboard"
+                    className="main-hero-img img-fluid"
+                  />
+                  <div className="image-glow-effect"></div>
+                </div>
               </motion.div>
             </div>
           </div>
         </div>
-        <div className="hero-shape-1"></div>
-        <div className="hero-shape-2"></div>
       </section>
 
       {/* Features Section */}
-      <section className="features-section section-padding">
+      <section className="features-section">
         <div className="container">
-          <div className="section-header text-center" data-aos="fade-up">
-            <h2>Powerful Features</h2>
-            <p>Discover how Nogen AI can transform your note-taking experience</p>
+          <div className="section-header text-center mb-5">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              Powerful Features
+            </motion.h2>
+            <motion.div className="title-underline mx-auto"></motion.div>
+            <motion.p
+              className="header-subtitle mt-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              Discover how Nogen AI can transform your note-taking experience
+            </motion.p>
           </div>
-          <div className="row">
-            <div className="col-md-4" data-aos="fade-up" data-aos-delay="100">
-              <div className="feature-card card-custom">
-                <div className="feature-icon">
-                  <i className="fas fa-brain"></i>
-                </div>
-                <h3>AI-Powered Insights</h3>
-                <p>Get intelligent suggestions, summaries, and connections between your notes using advanced AI algorithms.</p>
+
+          <div className="row g-4 mt-5">
+            {[
+              { icon: 'brain', title: 'AI Insights', desc: 'Get intelligent suggestions, summaries, and connections between your notes using advanced AI.' },
+              { icon: 'bolt', title: 'Quick Capture', desc: 'Instantly capture ideas with voice, text, or images. Our AI organizes everything automatically.' },
+              { icon: 'link', title: 'Smart Linking', desc: 'Discover relationships between notes you never knew existed with our intelligent linking system.' },
+              { icon: 'sync-alt', title: 'Real-time Sync', desc: 'Access your notes from any device with instant synchronization across all platforms.' },
+              { icon: 'shield-alt', title: 'Bank-Grade Security', desc: 'Your notes are encrypted and securely stored with enterprise-grade security protocols.' },
+              { icon: 'coins', title: 'E-Coin Rewards', desc: 'Earn E-Coins for consistent usage and unlock premium features and templates.' }
+            ].map((feature, index) => (
+              <div className="col-lg-4 col-md-6" key={index}>
+                <motion.div
+                  className="feature-card-premium"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="card-icon-box">
+                    <i className={`fas fa-${feature.icon}`}></i>
+                  </div>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.desc}</p>
+                </motion.div>
               </div>
-            </div>
-            <div className="col-md-4" data-aos="fade-up" data-aos-delay="200">
-              <div className="feature-card card-custom">
-                <div className="feature-icon">
-                  <i className="fas fa-bolt"></i>
-                </div>
-                <h3>Quick Capture</h3>
-                <p>Instantly capture ideas with voice, text, or images. Our AI organizes everything automatically.</p>
-              </div>
-            </div>
-            <div className="col-md-4" data-aos="fade-up" data-aos-delay="300">
-              <div className="feature-card card-custom">
-                <div className="feature-icon">
-                  <i className="fas fa-link"></i>
-                </div>
-                <h3>Smart Connections</h3>
-                <p>Discover relationships between notes you never knew existed with our intelligent linking system.</p>
-              </div>
-            </div>
-            <div className="col-md-4" data-aos="fade-up" data-aos-delay="400">
-              <div className="feature-card card-custom">
-                <div className="feature-icon">
-                  <i className="fas fa-sync-alt"></i>
-                </div>
-                <h3>Real-time Sync</h3>
-                <p>Access your notes from any device with instant synchronization across all platforms.</p>
-              </div>
-            </div>
-            <div className="col-md-4" data-aos="fade-up" data-aos-delay="500">
-              <div className="feature-card card-custom">
-                <div className="feature-icon">
-                  <i className="fas fa-shield-alt"></i>
-                </div>
-                <h3>Secure Storage</h3>
-                <p>Your notes are encrypted and securely stored with enterprise-grade security protocols.</p>
-              </div>
-            </div>
-            <div className="col-md-4" data-aos="fade-up" data-aos-delay="600">
-              <div className="feature-card card-custom">
-                <div className="feature-icon">
-                  <i className="fas fa-coins"></i>
-                </div>
-                <h3>E-Coin Rewards</h3>
-                <p>Earn E-Coins for consistent usage and unlock premium features and templates.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section className="how-it-works-section section-padding">
+      <section className="how-it-works-section">
         <div className="container">
-          <div className="section-header text-center" data-aos="fade-up">
-            <h2>How It Works</h2>
-            <p>Simple steps to revolutionize your note-taking experience</p>
+          <div className="section-header text-center mb-5">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              How It Works
+            </motion.h2>
+            <motion.div className="title-underline mx-auto"></motion.div>
+            <motion.p
+              className="header-subtitle mt-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              Four simple steps to revolutionize your productivity
+            </motion.p>
           </div>
-          <div className="steps-container">
-            <div className="step-item" data-aos="fade-right">
-              <div className="step-number">1</div>
-              <div className="step-content">
-                <h3>Create an Account</h3>
-                <p>Sign up for free and set up your personal workspace in seconds.</p>
-              </div>
-            </div>
-            <div className="step-item" data-aos="fade-right" data-aos-delay="100">
-              <div className="step-number">2</div>
-              <div className="step-content">
-                <h3>Capture Your Ideas</h3>
-                <p>Use text, voice, or images to quickly capture your thoughts.</p>
-              </div>
-            </div>
-            <div className="step-item" data-aos="fade-right" data-aos-delay="200">
-              <div className="step-number">3</div>
-              <div className="step-content">
-                <h3>AI Enhancement</h3>
-                <p>Our AI automatically organizes, summarizes, and enhances your notes.</p>
-              </div>
-            </div>
-            <div className="step-item" data-aos="fade-right" data-aos-delay="300">
-              <div className="step-number">4</div>
-              <div className="step-content">
-                <h3>Access Anywhere</h3>
-                <p>Sync across all your devices and access your notes from anywhere.</p>
-              </div>
+
+          <div className="steps-wrapper mt-5">
+            <div className="row g-4">
+              {[
+                { num: '01', title: 'Create Account', desc: 'Sign up for free and set up your personal workspace in seconds.' },
+                { num: '02', title: 'Capture Ideas', desc: 'Use text, voice, or images to quickly capture your thoughts.' },
+                { num: '03', title: 'AI Optimization', desc: 'Our AI automatically organizes, summarizes, and enhances your notes.' },
+                { num: '04', title: 'Stay Synced', desc: 'Sync across all your devices and access your notes from anywhere.' }
+              ].map((step, index) => (
+                <div className="col-lg-3 col-md-6" key={index}>
+                  <motion.div
+                    className="step-card-modern"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.15 }}
+                  >
+                    <div className="step-num-badge">{step.num}</div>
+                    <h4>{step.title}</h4>
+                    <p>{step.desc}</p>
+                  </motion.div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="testimonials-section section-padding">
+      <section className="testimonials-section">
         <div className="container">
-          <div className="section-header text-center" data-aos="fade-up">
-            <h2>What Our Users Say</h2>
-            <p>Join thousands of satisfied users who have transformed their note-taking</p>
+          <div className="section-header text-center mb-5">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              What Our Users Say
+            </motion.h2>
+            <motion.div className="title-underline mx-auto"></motion.div>
+            <motion.p
+              className="header-subtitle mt-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              Feedback from the community that drives us forward
+            </motion.p>
           </div>
-          <div className="row">
-            <div className="col-md-4" data-aos="fade-up">
-              <div className="testimonial-card card-custom">
-                <div className="testimonial-rating">
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                </div>
-                <p className="testimonial-text">"Nogen AI has completely changed how I organize my thoughts. The AI suggestions are incredibly accurate and save me hours of work."</p>
-                <div className="testimonial-author">
-                  <img src="harsh.jpg" height={"135px"} width={"135px"} alt="Harsh Shrivastva" />
-                  <div>
-                    <h4>Harsh Shrivastva</h4>
-                    <p>Graduate Student</p>
+
+          <div className="row g-4 mt-5">
+            {[
+              {
+                name: 'Harsh Shrivastva',
+                role: 'Graduate Student',
+                text: 'Nogen AI has completely changed how I organize my thoughts. The AI suggestions are incredibly accurate.',
+                img: 'harsh.jpg'
+              },
+              {
+                name: 'Himanshu Shrivastava',
+                role: 'Graduate Student',
+                text: 'As a student, Nogen AI has been a game-changer for my studies. The smart connections feature is mind-blowing.',
+                img: 'anshu.jpg'
+              },
+              {
+                name: 'Emily Rodriguez',
+                role: 'Content Creator',
+                text: 'The E-Coin rewards system makes using Nogen AI even more enjoyable. I love the premium templates!',
+                img: 'harsh.jpg'
+              }
+            ].map((testimonial, index) => (
+              <div className="col-lg-4" key={index}>
+                <motion.div
+                  className="testimonial-card-premium"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="testimonial-stars mb-3">
+                    <i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i>
                   </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-4" data-aos="fade-up" data-aos-delay="100">
-              <div className="testimonial-card card-custom">
-                <div className="testimonial-rating">
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                </div>
-                <p className="testimonial-text">"As a student, Nogen AI has been a game-changer for my studies. The smart connections feature helps me see relationships between different subjects."</p>
-                <div className="testimonial-author">
-                  <img src="anshu.jpg" height={"135px"} width={"135px"} alt="Himanshu Shrivastava" />
-                  <div>
-                    <h4>Himanshu Shrivastava</h4>
-                    <p>Graduate Student</p>
+                  <p className="testimonial-quote">"{testimonial.text}"</p>
+                  <div className="testimonial-footer mt-4">
+                    <div className="author-avatar">
+                      <img src={testimonial.img} alt={testimonial.name} onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${testimonial.name}&background=ff007f&color=fff`; }} />
+                    </div>
+                    <div className="author-info">
+                      <h5>{testimonial.name}</h5>
+                      <span>{testimonial.role}</span>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               </div>
-            </div>
-            <div className="col-md-4" data-aos="fade-up" data-aos-delay="200">
-              <div className="testimonial-card card-custom">
-                <div className="testimonial-rating">
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star-half-alt"></i>
-                </div>
-                <p className="testimonial-text">"The E-Coin rewards system makes using Nogen AI even more enjoyable. I've unlocked several premium templates that have improved my workflow."</p>
-                <div className="testimonial-author">
-                  <img src="harsh.jpg" height={"135px"} width={"135px"} alt="Harsh Shrivastva" />
-                  <div>
-                    <h4>Emily Rodriguez</h4>
-                    <p>Content Creator</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
-
-      
     </div>
   )
 }
