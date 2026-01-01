@@ -2,50 +2,73 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../api/axios';
 import { FiBell, FiX, FiCheck, FiTrash2 } from 'react-icons/fi';
 import './NotificationDropdown.css';
+import { useSocket } from '../context/SocketContext';
 
 const NotificationDropdown = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { socket } = useSocket();
 
-  // getToken function is removed as tokens are HTTP-only cookies and not accessible by client-side JS.
-  // axiosInstance is configured with withCredentials: true, so cookies are sent automatically.
+  // ... previous logic ...
 
   const fetchNotifications = async () => {
+    // ... logic ...
     try {
-      // Ensure user is logged in before attempting to fetch notifications
-      if (!user) return; 
-
+      if (!user) return;
       setLoading(true);
-      const response = await axiosInstance.get('/notifications?limit=10'); // No manual Authorization header needed
-      
+      const response = await axiosInstance.get('/notifications?limit=10');
       setNotifications(response.data.notifications);
       setUnreadCount(response.data.unreadCount);
     } catch (err) {
-      console.error('❌ Failed to fetch notifications:', err.message, err.response?.data);
-      // Handle unauthorized errors, e.g., redirect to login or show a message
-      if (err.response?.status === 401) {
-        // Optionally, trigger a logout if the user is truly unauthorized
-        // This component doesn't have direct access to logout, but a parent could handle it.
-        console.warn("User unauthorized to fetch notifications. Session might be expired.");
-      }
+      console.error('❌ Failed to fetch notifications:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user && isOpen) { // Only fetch if user is logged in and dropdown is open
+    if (user) {
+      // Initial fetch for count
+      const initialFetch = async () => {
+        try {
+          const response = await axiosInstance.get('/notifications?limit=0');
+          setUnreadCount(response.data.unreadCount);
+        } catch (err) { }
+      };
+      initialFetch();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('new_notification', (notification) => {
+        console.log('🔔 New real-time notification received:', notification);
+        setNotifications(prev => [notification, ...prev].slice(0, 10));
+        setUnreadCount(prev => prev + 1);
+
+        // Optional: Browser notification or sound
+        if (Notification.permission === 'granted') {
+          new Notification(notification.title, { body: notification.message });
+        }
+      });
+
+      return () => socket.off('new_notification');
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    if (user && isOpen) {
       fetchNotifications();
     }
-  }, [user, isOpen]); // Depend on user and isOpen
+  }, [user, isOpen]);
 
   const handleMarkAsRead = async (notificationId) => {
     try {
       if (!user) return; // Ensure user is logged in
       await axiosInstance.put(`/notifications/${notificationId}/read`, {}); // No manual Authorization header needed
-      
+
       setNotifications(prev =>
         prev.map(notif =>
           notif._id === notificationId ? { ...notif, read: true } : notif
@@ -61,7 +84,7 @@ const NotificationDropdown = ({ user }) => {
     try {
       if (!user) return; // Ensure user is logged in
       await axiosInstance.delete(`/notifications/${notificationId}`); // No manual Authorization header needed
-      
+
       setNotifications(prev => prev.filter(n => n._id !== notificationId));
     } catch (err) {
       console.error('❌ Failed to delete notification:', err.message, err.response?.data);
@@ -72,7 +95,7 @@ const NotificationDropdown = ({ user }) => {
     try {
       if (!user) return; // Ensure user is logged in
       await axiosInstance.put('/notifications/mark-all/read', {}); // No manual Authorization header needed
-      
+
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (err) {

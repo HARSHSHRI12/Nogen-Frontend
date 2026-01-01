@@ -22,6 +22,14 @@ import Profile from "./Pages/Profile";
 import SettingsPage from "./Pages/SettingsPage";
 import HomeRedirect from "./components/HomeRedirect";
 
+// New Network Components
+import NetworkLayout from "./Pages/Network/NetworkLayout";
+import AllConnections from "./Pages/Network/AllConnections";
+import Suggestions from "./Pages/Network/Suggestions";
+import ConnectionRequests from "./Pages/Network/ConnectionRequests";
+import Feed from "./Pages/Network/Feed";
+import Chat from "./Pages/Chat";
+
 function App() {
   const { settings } = useSettings();
 
@@ -95,8 +103,6 @@ function App() {
             }
           />
 
-          {/* Correct way to route to CompilerPage */}
-
           {/* Role-based Routes */}
           <Route
             path="/student-dashboard"
@@ -112,6 +118,24 @@ function App() {
               <RoleBasedRoute allowedRole="teacher">
                 <TeacherDashboard />
               </RoleBasedRoute>
+            }
+          />
+
+          {/* Network Routes */}
+          <Route path="/network" element={<PrivateRoute><NetworkLayout /></PrivateRoute>}>
+            <Route index element={<AllConnections />} />
+            <Route path="all" element={<AllConnections />} />
+            <Route path="suggestions" element={<Suggestions />} />
+            <Route path="requests" element={<ConnectionRequests />} />
+            <Route path="feed" element={<Feed />} />
+          </Route>
+
+          <Route
+            path="/chat/:userId"
+            element={
+              <PrivateRoute>
+                <Chat />
+              </PrivateRoute>
             }
           />
         </Routes>
