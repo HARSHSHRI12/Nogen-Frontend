@@ -99,6 +99,21 @@ const Navbar = () => {
             </Link>
           </li>
 
+          {user && (
+            <li className="nav-item network-item">
+              <div className="network-dropdown-wrapper">
+                <Link to="/network/all" className={`nav-link ${location.pathname.startsWith('/network') ? 'active' : ''}`}>
+                  Network
+                </Link>
+                <div className="network-dropdown">
+                  <Link to="/network/all" className="dropdown-link">All</Link>
+                  <Link to="/network/suggestions" className="dropdown-link">Suggestions</Link>
+                  <Link to="/network/requests" className="dropdown-link">Requests</Link>
+                </div>
+              </div>
+            </li>
+          )}
+
           {/* Theme Toggle */}
           <li className="nav-item">
             <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle Theme">

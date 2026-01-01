@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.js'
 import { AuthProvider } from './context/AuthContext.js'
+import { SocketProvider } from './context/SocketContext.js'
 import { SettingsProvider } from './context/SettingsContext.js'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -13,9 +14,11 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <SettingsProvider>
-          <App />
-        </SettingsProvider>
+        <SocketProvider>
+          <SettingsProvider>
+            <App />
+          </SettingsProvider>
+        </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

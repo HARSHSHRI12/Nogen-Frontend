@@ -33,41 +33,51 @@ const AiAssistant = () => {
   const [generatedImages, setGeneratedImages] = useState([]);
   const [advancedInput, setAdvancedInput] = useState('');
   const [messages, setMessages] = useState([]);
-  const [isTutorMode, setIsTutorMode] = useState(false); // New state for tutor mode
-  const [tutorRequestType, setTutorRequestType] = useState(''); // New state for tutor request type
+  const [isTutorMode, setIsTutorMode] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
+  const [tutorRequestType, setTutorRequestType] = useState('');
   //for quize 
   const [showQuiz, setShowQuiz] = useState(false);
- const [showQuizButton, setShowQuizButton] = useState(false); // Show quiz button ke liye state
-const [quizQuestions, setQuizQuestions] = useState([]);
+  const [showQuizButton, setShowQuizButton] = useState(false); // Show quiz button ke liye state
+  const [quizQuestions, setQuizQuestions] = useState([]);
 
-useEffect(() => {
-  if (messages.some((m) => m.role === 'assistant')) {
-    setShowQuizButton(true);
-  }
-}, [messages]);
-
-  
-const generateNotesAndQuiz = async () => {
-  // Your notes generation logic here...
-  const notes = "Some AI generated content...";
-
-  // Dummy logic to generate questions from notes (replace with API later)
-  const generatedQuestions = [
-    {
-      question: "What is OSI model?",
-      options: ["A protocol", "A software", "A networking model", "A hardware device"],
-      answer: "A networking model",
-    },
-    {
-      question: "Which layer handles routing?",
-      options: ["Transport", "Network", "Data Link", "Application"],
-      answer: "Network",
+  useEffect(() => {
+    if (messages.some((m) => m.role === 'assistant')) {
+      setShowQuizButton(true);
     }
-  ];
+  }, [messages]);
 
-  //  Navigate to quiz page with questions
-  navigate('/quiz', { state: { questions: generatedQuestions } });
-};
+  // Model Validation Effect
+  useEffect(() => {
+    const validModels = ['llama-3.3-70b-versatile', 'llama-3.1-70b-versatile', 'mixtral-8x7b-32768', 'llama3-8b-8192'];
+    if (!validModels.includes(selectedModel)) {
+      console.log("Switching to Groq default model...");
+      setSelectedModel('llama-3.3-70b-versatile');
+    }
+  }, [selectedModel]);
+
+
+  const generateNotesAndQuiz = async () => {
+    // Your notes generation logic here...
+    const notes = "Some AI generated content...";
+
+    // Dummy logic to generate questions from notes (replace with API later)
+    const generatedQuestions = [
+      {
+        question: "What is OSI model?",
+        options: ["A protocol", "A software", "A networking model", "A hardware device"],
+        answer: "A networking model",
+      },
+      {
+        question: "Which layer handles routing?",
+        options: ["Transport", "Network", "Data Link", "Application"],
+        answer: "Network",
+      }
+    ];
+
+    //  Navigate to quiz page with questions
+    navigate('/quiz', { state: { questions: generatedQuestions } });
+  };
 
   //some implementation of quize
 
@@ -123,39 +133,39 @@ const generateNotesAndQuiz = async () => {
 
   useEffect(() => {
     const isSpeechRecognitionSupported = 'webkitSpeechRecognition' in window;
-  
+
     if (!isSpeechRecognitionSupported) {
       addMessage('assistant', 'Your browser does not support voice input');
       return;
     }
-  
+
     try {
       const recognition = new window.webkitSpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = false;
       recognition.lang = 'en-US';
-  
+
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setMessage(prev => prev ? `${prev} ${transcript}` : transcript);
         setIsListening(false);
       };
-  
+
       recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
         addMessage('assistant', `Speech recognition error: ${event.error}`);
       };
-  
+
       recognition.onend = () => {
         if (isListening) setIsListening(false);
       };
-  
+
       recognitionRef.current = recognition;
     } catch (error) {
       addMessage('assistant', 'Speech recognition setup failed.');
     }
-  
+
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -163,7 +173,7 @@ const generateNotesAndQuiz = async () => {
       }
     };
   }, []);
-  
+
 
   useEffect(() => {
     try {
@@ -176,7 +186,7 @@ const generateNotesAndQuiz = async () => {
       console.error('Failed to apply theme:', error);
     }
   }, [settings?.theme]);
-  
+
 
   // Auto-scroll to bottom with debounce
   useEffect(() => {
@@ -191,7 +201,7 @@ const generateNotesAndQuiz = async () => {
     return () => clearTimeout(scrollTimer);
   }, [chatHistory, generatedImages]);
 
- 
+
   const onQuizComplete = () => {
     const result = {
       userId: "Harsh", // Replace with actual user id (can be from JWT/Auth later)
@@ -202,7 +212,7 @@ const generateNotesAndQuiz = async () => {
     };
     submitQuizResult(result);
   };
-  
+
 
 
   // Focus input when form is submitted
@@ -218,26 +228,28 @@ const generateNotesAndQuiz = async () => {
 
   // {/* Quiz Button when notes are generated */}
 
-  {showQuizButton && (
-    <motion.div
-      className="chat-header"
-      onClick={() => navigate('/quiz')}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      Start Quiz
-    </motion.div>
-  )}
+  {
+    showQuizButton && (
+      <motion.div
+        className="chat-header"
+        onClick={() => navigate('/quiz')}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        Start Quiz
+      </motion.div>
+    )
+  }
 
   // Format year/semester input with better validation
   const formatYearSemInput = useCallback((value) => {
     try {
       let formatted = value.replace(/[^0-9stndrdth\/]/gi, '');
-      
+
       formatted = formatted.replace(/(\d+)([a-z]*)/gi, (match, num, suffix) => {
         const n = parseInt(num, 10);
         if (isNaN(n)) return match;
-        
+
         let s = suffix.toLowerCase();
         if (!s) {
           if (n === 1) s = 'st';
@@ -245,10 +257,10 @@ const generateNotesAndQuiz = async () => {
           else if (n === 3) s = 'rd';
           else s = 'th';
         }
-        
+
         return n + s;
       });
-      
+
       return formatted;
     } catch (error) {
       console.error('Formatting error:', error);
@@ -266,18 +278,18 @@ const generateNotesAndQuiz = async () => {
 
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = settings.speechRate;
       utterance.pitch = settings.speechPitch;
-      
+
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = (event) => {
         console.error('Speech synthesis error:', event);
         setIsSpeaking(false);
       };
-      
+
       speechSynthesisRef.current = utterance;
       window.speechSynthesis.speak(utterance);
     } catch (error) {
@@ -321,7 +333,7 @@ const generateNotesAndQuiz = async () => {
   const validateField = useCallback((name, value) => {
     try {
       const trimmedValue = value.trim();
-      
+
       switch (name) {
         case 'course':
           if (!trimmedValue) return 'Course is required';
@@ -329,7 +341,7 @@ const generateNotesAndQuiz = async () => {
           if (/^\d/.test(trimmedValue)) return 'Course cannot start with a number';
           if (/[^a-zA-Z0-9\s\-]/.test(trimmedValue)) return 'Invalid characters';
           return '';
-        
+
         case 'subject':
           if (!trimmedValue) return 'Subject is required';
           if (trimmedValue.length < 2) return 'Subject must be at least 3 characters';
@@ -337,30 +349,30 @@ const generateNotesAndQuiz = async () => {
           if (!/^[a-zA-Z]/.test(trimmedValue)) return 'Subject must start with a letter';
           if (/[^a-zA-Z0-9\s\-]/.test(trimmedValue)) return 'Subject contains invalid characters';
           return '';
-        
+
         case 'classLevel':
           if (trimmedValue && !/^[a-zA-Z0-9\s\-]+$/.test(trimmedValue)) return 'Invalid characters';
           return '';
-        
+
         case 'yearSem':
           if (!trimmedValue) return '';
-          
+
           if (!/^\d+(st|nd|rd|th)\/\d+(st|nd|rd|th)$/i.test(trimmedValue)) {
             return 'Format must be like: 2nd/4th';
           }
-          
+
           const [yearStr, semStr] = trimmedValue.split('/');
           const yearNum = parseInt(yearStr, 10);
           const semNum = parseInt(semStr, 10);
-          
+
           if (isNaN(yearNum)) return 'Invalid year number';
           if (isNaN(semNum)) return 'Invalid semester number';
           if (yearNum < 1 || yearNum > 6) return 'Year must be between 1st and 6th';
           if (semNum < 1 || semNum > 8) return 'Semester must be between 1st and 8th';
           if (semNum > yearNum * 2) return 'Semester exceeds year range';
-          
+
           return '';
-        
+
         default:
           return '';
       }
@@ -373,17 +385,17 @@ const generateNotesAndQuiz = async () => {
   // Handle form input changes with validation
   const handleDetailChange = useCallback((e) => {
     const { name, value } = e.target;
-    
+
     try {
       if (name === 'yearSem') {
         const formattedValue = formatYearSemInput(value);
         setUserDetails(prev => ({ ...prev, [name]: formattedValue }));
-        
+
         const error = validateField(name, formattedValue);
         setErrors(prev => ({ ...prev, [name]: error }));
         return;
       }
-      
+
       setUserDetails(prev => ({ ...prev, [name]: value }));
       const error = validateField(name, value);
       setErrors(prev => ({ ...prev, [name]: error }));
@@ -402,7 +414,7 @@ const generateNotesAndQuiz = async () => {
         yearSem: validateField('yearSem', userDetails.yearSem)
       };
       setErrors(newErrors);
-      
+
       return !Object.values(newErrors).some(error => error);
     } catch (error) {
       console.error('Validation error:', error);
@@ -426,17 +438,18 @@ const generateNotesAndQuiz = async () => {
   }, [validateAll, userDetails]);
 
   // Add message to chat with timestamp and ID
-  const addMessage = useCallback((type, text) => {
+  const addMessage = useCallback((type, text, model = null) => {
     try {
-      const newMessage = { 
-        type, 
+      const newMessage = {
+        type,
         text,
         timestamp: new Date().toISOString(),
-        id: Date.now()
+        id: Date.now(),
+        modelUsed: model
       };
-      
+
       setChatHistory(prev => [...prev, newMessage]);
-      
+
       if (type === 'assistant' && settings.autoSpeak) {
         speak(text);
       }
@@ -493,7 +506,7 @@ Format requirements:
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!message.trim() || isTyping) return;
-  
+
     const userMessage = message;
     addMessage('user', userMessage);
     setMessage('');
@@ -502,181 +515,182 @@ Format requirements:
     const requestType = isTutorMode ? 'explanation' : '';
     sendQueryToBackend(userMessage, requestType);
   };
-  
+
   const handleTutorAction = (requestType) => {
     const topic = userDetails.importantTopics;
     if (!topic.trim()) {
       addMessage('assistant', "Please enter a topic in the 'Topic/Query' field first.");
       return;
     }
-    
+
     // Make the user message more descriptive
     const descriptiveRequest = requestType.replace('_', ' ');
     addMessage('user', `Generate ${descriptiveRequest} for: ${topic}`);
     sendQueryToBackend(topic, requestType);
   };
 
-    const sendQueryToBackend = async (query, requestType = '') => {
+  const sendQueryToBackend = async (query, requestType = '') => {
 
-      setIsTyping(true);
+    setIsTyping(true);
 
-      try {
+    try {
 
-        let endpoint = `${process.env.REACT_APP_API_URL}/generate`;
+      let endpoint = `${process.env.REACT_APP_API_URL}/generate`;
 
-        let requestBody;
+      let requestBody;
 
-  
 
-        if (isTutorMode) {
 
-          endpoint = `${process.env.REACT_APP_API_URL}/generate/tutor`;
+      if (isTutorMode) {
 
-          
+        endpoint = `${process.env.REACT_APP_API_URL}/generate/tutor`;
 
-          // Exclude the last message (current user query) from history
 
-          let historyForBackend = chatHistory.slice(0, -1).map(msg => ({
 
-            role: msg.type === 'user' ? 'user' : 'model',
+        // Exclude the last message (current user query) from history
 
-            parts: [{ text: msg.text }]
+        let historyForBackend = chatHistory.slice(0, -1).map(msg => ({
 
-          }));
+          role: msg.type === 'user' ? 'user' : 'model',
 
-          
+          parts: [{ text: msg.text }]
 
-          // Find the index of the first user message
+        }));
 
-          const firstUserIndex = historyForBackend.findIndex(msg => msg.role === 'user');
 
-          
 
-          // If a user message is found, slice from there, otherwise send empty history
+        // Find the index of the first user message
 
-          if (firstUserIndex !== -1) {
+        const firstUserIndex = historyForBackend.findIndex(msg => msg.role === 'user');
 
-            historyForBackend = historyForBackend.slice(firstUserIndex);
 
-          } else {
 
-            historyForBackend = [];
+        // If a user message is found, slice from there, otherwise send empty history
 
-          }
+        if (firstUserIndex !== -1) {
 
-  
-
-          requestBody = {
-
-            topic: query,
-
-            subject: userDetails.subject || 'General',
-
-            history: historyForBackend,
-
-            requestType: requestType,
-
-            userQuery: query, // The user's most recent message/query
-
-          };
+          historyForBackend = historyForBackend.slice(firstUserIndex);
 
         } else {
 
-          // Prepare the complete request body for notes generation
-
-          requestBody = {
-
-            query: query,
-
-            subject: userDetails.subject || 'General',
-
-            course: userDetails.course || 'Unknown Course',
-
-            classLevel: userDetails.classLevel || '',
-
-            yearSem: userDetails.yearSem || '',
-
-            importantTopics: userDetails.importantTopics || '',
-
-            formatPreference: userDetails.formatPreference || 'bullet-points',
-
-            advancedMode: isAdvancedMode,
-
-            userId: "current-user-id"
-
-          };
+          historyForBackend = [];
 
         }
 
-    
 
 
+        requestBody = {
 
-    
+          topic: query,
 
-        const response = await fetch(endpoint, {
+          subject: userDetails.subject || 'General',
 
-          method: 'POST',
+          history: historyForBackend,
 
-          headers: {
+          requestType: requestType,
 
-            'Content-Type': 'application/json'
+          userQuery: query, // The user's most recent message/query
+          requestedModel: selectedModel
+        };
 
-          },
+      } else {
 
-          body: JSON.stringify(requestBody)
+        // Prepare the complete request body for notes generation
 
-        });
+        requestBody = {
 
-    
+          query: query,
 
-        if (!response.ok) {
+          subject: userDetails.subject || 'General',
 
-          const errorData = await response.json();
+          course: userDetails.course || 'Unknown Course',
 
-          console.error("Backend validation errors:", errorData.errors);
+          classLevel: userDetails.classLevel || '',
 
-          throw new Error(errorData.error || errorData.errors?.[0]?.msg || 'Request failed');
+          yearSem: userDetails.yearSem || '',
 
-        }
+          importantTopics: userDetails.importantTopics || '',
 
-    
+          formatPreference: userDetails.formatPreference || 'bullet-points',
 
-        const data = await response.json();
+          advancedMode: isAdvancedMode,
 
-
-
-    
-
-        // Defensive check for the response data
-
-        if (data?.data && typeof data.data === 'string') {
-
-          addMessage('assistant', data.data);
-
-        } else {
-
-          addMessage('assistant', "❗ I received an empty response. Please try again.");
-
-        }
-
-        
-
-    
-
-      } catch (error) {
-
-        addMessage('assistant', `Error: ${error.message}`);
-
-        console.error('API Error Details:', error);
-
-      } finally {
-
-        setIsTyping(false);
+          userId: "current-user-id",
+          requestedModel: selectedModel
+        };
 
       }
 
-    };
+
+
+
+
+
+
+      const response = await fetch(endpoint, {
+
+        method: 'POST',
+
+        headers: {
+
+          'Content-Type': 'application/json'
+
+        },
+
+        body: JSON.stringify(requestBody)
+
+      });
+
+
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: 'Unknown server error' };
+        }
+        console.error("Backend Error:", errorData);
+        throw new Error(errorData.error || errorData.message || 'Request failed');
+      }
+
+
+
+      const data = await response.json();
+
+
+
+
+
+      // Defensive check for the response data
+
+      if (data?.data && typeof data.data === 'string') {
+
+        addMessage('assistant', data.data, data.modelUsed);
+
+      } else {
+
+        addMessage('assistant', "❗ I received an empty response. Please try again.");
+
+      }
+
+
+
+
+
+    } catch (error) {
+
+      addMessage('assistant', `Error: ${error.message}`);
+
+      console.error('API Error Details:', error);
+
+    } finally {
+
+      setIsTyping(false);
+
+    }
+
+  };
 
 
   // Handle key press (Enter to send)
@@ -685,10 +699,10 @@ Format requirements:
       handleSubmit(e);
     }
   };
-  
+
   const handleAdvancedParse = useCallback(() => {
     if (!advancedInput || typeof advancedInput !== 'string' || !advancedInput.trim()) return;
-  
+
     try {
       let extractedDetails = {
         course: '',
@@ -697,11 +711,11 @@ Format requirements:
         yearSem: '',
         importantTopics: ''
       };
-  
+
       // 1. Extract Course (same as before)
       const courseMatch = advancedInput.match(/\b(BCA|MCA|BSc|MSc|B\.?Tech|M\.?Tech|BA|MA|BCom|MCom|PhD|BBA|MBA|BE|ME)\b/i);
       if (courseMatch) extractedDetails.course = courseMatch[1].toUpperCase();
-  
+
       // 2. IMPROVED SUBJECT EXTRACTION
       // First try to find subject after "of" or "for"
       const subjectPatterns = [
@@ -714,7 +728,7 @@ Format requirements:
         // Pattern for subject at beginning
         /^([a-zA-Z\s]+)\s+(?:notes|study|material)/i
       ];
-      
+
       for (const pattern of subjectPatterns) {
         const subjectMatch = advancedInput.match(pattern);
         if (subjectMatch && subjectMatch[1]) {
@@ -726,22 +740,22 @@ Format requirements:
           }
         }
       }
-  
+
       // 3. Extract Level (same as before)
       const levelMap = {
-        easy: 'Beginner', 
+        easy: 'Beginner',
         beginner: 'Beginner',
         medium: 'Intermediate',
         intermediate: 'Intermediate',
         hard: 'Advanced',
         advanced: 'Advanced'
       };
-      
+
       const levelMatch = advancedInput.match(/\b(easy|medium|hard|beginner|intermediate|advanced)\b/i);
       if (levelMatch) {
         extractedDetails.classLevel = levelMap[levelMatch[1].toLowerCase()] || levelMatch[1];
       }
-  
+
       // 4. Extract Year/Semester (same as before)
       const yearSemPatterns = [
         /(\d+(?:st|nd|rd|th))\s*year.*?(\d+(?:st|nd|rd|th))\s*sem(?:ester)?/i,
@@ -750,7 +764,7 @@ Format requirements:
         /(\d+(?:st|nd|rd|th))\s*year/i,
         /(\d+(?:st|nd|rd|th))\s*sem(?:ester)?/i
       ];
-      
+
       for (const pattern of yearSemPatterns) {
         const match = advancedInput.match(pattern);
         if (match) {
@@ -764,14 +778,14 @@ Format requirements:
           break;
         }
       }
-  
+
       // 5. Extract Important Topics (same as before)
       const topicsPatterns = [
         /(?:important topics are|topics include|covering topics are|including)\s*([a-zA-Z0-9,\s-]+)/i,
         /(?:cover|include)\s*([a-zA-Z0-9,\s-]+?)\s*(?:topics|concepts)/i,
         /(?:focus on|about)\s*([a-zA-Z0-9,\s-]+)/i
       ];
-      
+
       for (const pattern of topicsPatterns) {
         const topicsMatch = advancedInput.match(pattern);
         if (topicsMatch && topicsMatch[1]) {
@@ -783,7 +797,7 @@ Format requirements:
           break;
         }
       }
-  
+
       // Final check - if subject not found but "of" exists
       if (!extractedDetails.subject) {
         const ofMatch = advancedInput.match(/\bof\s+([a-zA-Z\s]+?)(?:\s+(?:for|in|about|on|sem|year|level|topics))|$/i);
@@ -794,10 +808,10 @@ Format requirements:
           }
         }
       }
-  
+
       // Set extracted details in state
-      setUserDetails(prev => ({ 
-        ...prev, 
+      setUserDetails(prev => ({
+        ...prev,
         ...extractedDetails,
         course: extractedDetails.course || prev.course,
         subject: extractedDetails.subject || prev.subject,
@@ -805,7 +819,7 @@ Format requirements:
         yearSem: extractedDetails.yearSem || prev.yearSem,
         importantTopics: extractedDetails.importantTopics || prev.importantTopics
       }));
-  
+
       // Show success message with what was extracted
       let successMsg = "I've auto-filled these details:";
       if (extractedDetails.course) successMsg += `\n- Course: ${extractedDetails.course}`;
@@ -813,9 +827,9 @@ Format requirements:
       if (extractedDetails.yearSem) successMsg += `\n- Year/Sem: ${extractedDetails.yearSem}`;
       if (extractedDetails.classLevel) successMsg += `\n- Level: ${extractedDetails.classLevel}`;
       if (extractedDetails.importantTopics) successMsg += `\n- Topics: ${extractedDetails.importantTopics}`;
-      
+
       addMessage('assistant', successMsg);
-  
+
     } catch (error) {
       console.error("Advanced parsing error:", error);
       addMessage('assistant', "I found some details but please review the form for accuracy.");
@@ -839,7 +853,7 @@ Format requirements:
         color: rgb(0.2, 0.2, 0.4),
       });
       y -= 25;
-      
+
       page.drawText(`${userDetails.course} • ${new Date().toLocaleDateString()}`, {
         x: 50,
         y,
@@ -848,32 +862,32 @@ Format requirements:
         color: rgb(0.4, 0.4, 0.4),
       });
       y -= 40;
-      
+
       // Add images if available
       if (generatedImages.length > 0) {
         for (const img of generatedImages) {
           try {
             const response = await fetch(img.url);
             if (!response.ok) throw new Error('Image fetch failed');
-            
+
             const imageBytes = await response.arrayBuffer();
             const image = await pdfDoc.embedPng(imageBytes);
             const imgDims = image.scale(0.5);
-            
+
             if (y - imgDims.height < 50) {
               page = pdfDoc.addPage([595, 842]);
               y = height - 50;
             }
-            
+
             page.drawImage(image, {
               x: 50,
               y: y - imgDims.height,
               width: imgDims.width,
               height: imgDims.height,
             });
-            
+
             y -= (imgDims.height + 20);
-            
+
             // Add image caption
             page.drawText(img.altText || 'Diagram', {
               x: 50,
@@ -889,7 +903,7 @@ Format requirements:
           }
         }
       }
-      
+
       // Process text content
       const sections = notes.split('\n\n').filter(n => n.trim());
       for (const section of sections) {
@@ -897,15 +911,15 @@ Format requirements:
         const fontSize = isHeading ? 14 : 11;
         const currentFont = isHeading ? boldFont : font;
         const text = isHeading ? section.replace(/^#+\s*/, '') : section;
-        
+
         const lines = await wrapText(text, width - 100, currentFont, fontSize);
-        
+
         for (const line of lines) {
           if (y < 50) {
             page = pdfDoc.addPage([595, 842]);
             y = height - 50;
           }
-          
+
           page.drawText(line, {
             x: 50,
             y,
@@ -914,13 +928,13 @@ Format requirements:
             color: rgb(0, 0, 0),
             maxWidth: width - 100,
           });
-          
+
           y -= (fontSize + 4);
         }
-        
+
         y -= (isHeading ? 15 : 10);
       }
-      
+
       const footerText = `Generated by Nogen AI • Page ${pdfDoc.getPageCount()}`;
       const footerWidth = font.widthOfTextAtSize(footerText, 9);
       page.drawText(footerText, {
@@ -930,7 +944,7 @@ Format requirements:
         font,
         color: rgb(0.5, 0.5, 0.5),
       });
-      
+
       return await pdfDoc.save();
     } catch (error) {
       console.error('PDF generation failed:', error);
@@ -944,11 +958,11 @@ Format requirements:
       const words = text.split(' ');
       const lines = [];
       let currentLine = words[0];
-      
+
       for (let i = 1; i < words.length; i++) {
         const testLine = currentLine + ' ' + words[i];
         const testWidth = font.widthOfTextAtSize(testLine, fontSize);
-        
+
         if (testWidth <= maxWidth) {
           currentLine = testLine;
         } else {
@@ -968,7 +982,7 @@ Format requirements:
   const generateDOCX = async (notes) => {
     try {
       const children = [];
-      
+
       children.push(
         new Paragraph({
           text: `${userDetails.subject} Notes`,
@@ -976,7 +990,7 @@ Format requirements:
           spacing: { after: 400 },
         })
       );
-      
+
       children.push(
         new Paragraph({
           children: [
@@ -993,7 +1007,7 @@ Format requirements:
           spacing: { after: 200 },
         })
       );
-      
+
       // Process text content
       const sections = notes.split('\n\n').filter(n => n.trim());
       for (const section of sections) {
@@ -1018,7 +1032,7 @@ Format requirements:
           );
         }
       }
-      
+
       children.push(
         new Paragraph({
           text: `Generated by Nogen AI on ${new Date().toLocaleDateString()}`,
@@ -1026,7 +1040,7 @@ Format requirements:
           style: 'footer',
         })
       );
-      
+
       const doc = new Document({
         styles: {
           paragraphStyles: [
@@ -1043,162 +1057,161 @@ Format requirements:
           children
         }]
       });
-      
+
       return await Packer.toBlob(doc);
     } catch (error) {
       console.error('DOCX generation failed:', error);
       throw new Error('Failed to generate Word document');
     }
   };
-//for textarea mic start function 
-let recognitionInstance = null;
+  //for textarea mic start function 
+  let recognitionInstance = null;
 
-const startListening = () => {
-  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    alert("Speech Recognition is not supported in your browser.");
-    return;
-  }
-
-  if (recognitionInstance) {
-    recognitionInstance.abort(); // old instance ko close kar
-  }
-
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  recognition.onstart = () => {
-
-  };
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    setAdvancedInput((prev) => prev + ' ' + transcript);
-
-  };
-
-  recognition.onerror = (event) => {
-    console.error(" Speech error:", event.error);
-    if (event.error === "not-allowed") {
-      alert("Mic access not allowed. Please enable it in browser settings.");
-    } else if (event.error === "aborted") {
-      alert("Mic session was interrupted. Try again.");
-    } else {
-      alert("Mic error: " + event.error);
-    }
-  };
-
-  recognition.onend = () => {
-
-    recognitionInstance = null;
-  };
-
-  recognition.start();
-  recognitionInstance = recognition;
-};
-
-
-  
-
- // Download notes with robust PDF generation and error handling
-const downloadNotes = async () => {
-  if (isExporting) return;
-  setIsExporting(true);
-  
-  try {
-    // Prepare notes content
-    const notes = chatHistory
-      .filter(chat => chat.type === 'assistant')
-      .map(chat => chat.text)
-      .join('\n\n');
-    
-    if (!notes.trim()) {
-      throw new Error('No notes available to export');
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert("Speech Recognition is not supported in your browser.");
+      return;
     }
 
-    let blob;
-    if (exportFormat === 'pdf') {
-      // Enhanced PDF generation with proper error handling
-      blob = await generatePDFWithRetry(notes);
-    } else {
-      blob = await generateDOCX(notes);
+    if (recognitionInstance) {
+      recognitionInstance.abort(); // old instance ko close kar
     }
-    
-    // Sanitize filename
-    const fileName = `${userDetails.subject.replace(/[^a-z0-9]/gi, '_')}_notes_${
-      new Date().toISOString().slice(0,10)
-    }.${exportFormat}`;
-    
-    // Save file with fallback
+
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setAdvancedInput((prev) => prev + ' ' + transcript);
+
+    };
+
+    recognition.onerror = (event) => {
+      console.error(" Speech error:", event.error);
+      if (event.error === "not-allowed") {
+        alert("Mic access not allowed. Please enable it in browser settings.");
+      } else if (event.error === "aborted") {
+        alert("Mic session was interrupted. Try again.");
+      } else {
+        alert("Mic error: " + event.error);
+      }
+    };
+
+    recognition.onend = () => {
+
+      recognitionInstance = null;
+    };
+
+    recognition.start();
+    recognitionInstance = recognition;
+  };
+
+
+
+
+  // Download notes with robust PDF generation and error handling
+  const downloadNotes = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+
     try {
-      saveAs(blob, fileName);
-    } catch (saveError) {
-      console.error('File save error:', saveError);
-      // Fallback download method
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-    }
-  } catch (error) {
-    console.error('Export error:', error);
-    addMessage('assistant', `Export failed: ${error.message || 'Please try again.'}`);
-    
-    // Specific error messages for common cases
-    if (error.message.includes('PDF')) {
-      addMessage('assistant', 'Tip: Try exporting as DOCX or reduce the notes length');
-    }
-  } finally {
-    setIsExporting(false);
-  }
-};
+      // Prepare notes content
+      const notes = chatHistory
+        .filter(chat => chat.type === 'assistant')
+        .map(chat => chat.text)
+        .join('\n\n');
 
-// Enhanced PDF generation with retry logic
-const generatePDFWithRetry = async (content, retries = 2) => {
-  try {
-    // Using pdf-lib for more reliable PDF generation
-    const { PDFDocument, rgb } = await import('pdf-lib');
-    const { fontkit } = await import('@pdf-lib/fontkit');
-    
-    const pdfDoc = await PDFDocument.create();
-    pdfDoc.registerFontkit(fontkit);
-    
-    // Embed fonts (you'll need to load actual font files)
-    const fontBytes = await fetch('/fonts/NotoSans-Regular.ttf').then(res => res.arrayBuffer());
-    const font = await pdfDoc.embedFont(fontBytes);
-    
-    const page = pdfDoc.addPage([595, 842]); // A4 size
-    const { width, height } = page.getSize();
-    
-    page.drawText(content, {
-      x: 50,
-      y: height - 50,
-      size: 11,
-      font,
-      color: rgb(0, 0, 0),
-      maxWidth: width - 100,
-      lineHeight: 15,
-    });
-    
-    const pdfBytes = await pdfDoc.save();
-    return new Blob([pdfBytes], { type: 'application/pdf' });
-  } catch (error) {
-    if (retries > 0) {
+      if (!notes.trim()) {
+        throw new Error('No notes available to export');
+      }
 
-      return generatePDFWithRetry(content, retries - 1);
+      let blob;
+      if (exportFormat === 'pdf') {
+        // Enhanced PDF generation with proper error handling
+        blob = await generatePDFWithRetry(notes);
+      } else {
+        blob = await generateDOCX(notes);
+      }
+
+      // Sanitize filename
+      const fileName = `${userDetails.subject.replace(/[^a-z0-9]/gi, '_')}_notes_${new Date().toISOString().slice(0, 10)
+        }.${exportFormat}`;
+
+      // Save file with fallback
+      try {
+        saveAs(blob, fileName);
+      } catch (saveError) {
+        console.error('File save error:', saveError);
+        // Fallback download method
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      addMessage('assistant', `Export failed: ${error.message || 'Please try again.'}`);
+
+      // Specific error messages for common cases
+      if (error.message.includes('PDF')) {
+        addMessage('assistant', 'Tip: Try exporting as DOCX or reduce the notes length');
+      }
+    } finally {
+      setIsExporting(false);
     }
-    throw new Error(`PDF generation failed: ${error.message}`);
-  }
-};
+  };
 
-// DOCX generator example
+  // Enhanced PDF generation with retry logic
+  const generatePDFWithRetry = async (content, retries = 2) => {
+    try {
+      // Using pdf-lib for more reliable PDF generation
+      const { PDFDocument, rgb } = await import('pdf-lib');
+      const { fontkit } = await import('@pdf-lib/fontkit');
+
+      const pdfDoc = await PDFDocument.create();
+      pdfDoc.registerFontkit(fontkit);
+
+      // Embed fonts (you'll need to load actual font files)
+      const fontBytes = await fetch('/fonts/NotoSans-Regular.ttf').then(res => res.arrayBuffer());
+      const font = await pdfDoc.embedFont(fontBytes);
+
+      const page = pdfDoc.addPage([595, 842]); // A4 size
+      const { width, height } = page.getSize();
+
+      page.drawText(content, {
+        x: 50,
+        y: height - 50,
+        size: 11,
+        font,
+        color: rgb(0, 0, 0),
+        maxWidth: width - 100,
+        lineHeight: 15,
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      return new Blob([pdfBytes], { type: 'application/pdf' });
+    } catch (error) {
+      if (retries > 0) {
+
+        return generatePDFWithRetry(content, retries - 1);
+      }
+      throw new Error(`PDF generation failed: ${error.message}`);
+    }
+  };
+
+  // DOCX generator example
 
 
   // Format message with markdown, XSS protection, and custom tags
@@ -1208,20 +1221,47 @@ const generatePDFWithRetry = async (content, retries = 2) => {
       let safeText = text
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
-      
-      // Custom tag replacements
+
+      // ChatGPT-style Code Block Extraction and Replacement
+      safeText = safeText.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+        const language = lang || 'javascript';
+        return `
+          <div class="code-block-container">
+            <div class="code-block-header">
+              <span class="code-lang">${language}</span>
+              <button class="copy-code-btn" onclick="navigator.clipboard.writeText(\`${code.trim()}\`)">
+                <i class="far fa-copy"></i> Copy code
+              </button>
+            </div>
+            <pre class="code-block"><code>${code.trim()}</code></pre>
+          </div>
+        `;
+      });
+
+      // Headings with Sophisticated Styling
       safeText = safeText
-        .replace(/\[TOPIC\](.*?)\[\/TOPIC\]/g, '<div class="ai-topic">$1</div>')
-        .replace(/\[EXAMPLE\](.*?)\[\/EXAMPLE\]/g, '<div class="ai-example">$1</div>')
-        .replace(/\[IMPORTANT\](.*?)\[\/IMPORTANT\]/g, '<div class="ai-important">$1</div>')
-        .replace(/\[QUESTION\](.*?)\[\/QUESTION\]/g, '<div class="ai-question">$1</div>')
-        .replace(/\[FORMULA\](.*?)\[\/FORMULA\]/g, '<div class="ai-formula">$1</div>');
+        .replace(/^### (.*$)/gim, '<h3 class="notes-h3">$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2 class="notes-h2">$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1 class="notes-h1">$1</h1>');
+
+      // Professional Bullet Points
+      safeText = safeText
+        .replace(/^\s*[\*\-]\s+(.*$)/gim, '<div class="notes-li"><span class="bullet"></span><span class="li-content">$1</span></div>');
+
+      // Custom tag replacements with premium styling
+      safeText = safeText
+        .replace(/\[TOPIC\](.*?)\[\/TOPIC\]/g, '<div class="ai-topic"><span class="topic-icon">#</span> $1</div>')
+        .replace(/\[EXAMPLE\](.*?)\[\/EXAMPLE\]/g, '<div class="ai-example"><div class="badge"><i class="fas fa-flask"></i> Case Study / Example</div><div class="example-content">$1</div></div>')
+        .replace(/\[IMPORTANT\](.*?)\[\/IMPORTANT\]/g, '<div class="ai-important"><div class="important-header"><i class="fas fa-exclamation-triangle"></i> Key Insight</div>$1</div>')
+        .replace(/\[QUESTION\](.*?)\[\/QUESTION\]/g, '<div class="ai-question"><i class="fas fa-user-graduate"></i> $1</div>')
+        .replace(/\[FORMULA\](.*?)\[\/FORMULA\]/g, '<div class="ai-formula"><div class="formula-label">Mathematical Concept</div><div class="formula-body">$1</div></div>');
 
       // Standard markdown replacements
       return safeText
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="notes-bold">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em class="notes-italic">$1</em>')
+        .replace(/`(.*?)`/g, '<code class="inline-code">$1</code>')
+        .replace(/\n\n/g, '<div class="section-spacer"></div>')
         .replace(/\n/g, '<br>');
     } catch (error) {
       console.error('Message formatting error:', error);
@@ -1239,7 +1279,7 @@ const generatePDFWithRetry = async (content, retries = 2) => {
         const lastAssistantMessage = chatHistory
           .filter(chat => chat.type === 'assistant')
           .slice(-1)[0]?.text;
-        
+
         if (lastAssistantMessage) {
           speak(lastAssistantMessage);
         }
@@ -1253,7 +1293,7 @@ const generatePDFWithRetry = async (content, retries = 2) => {
   // Handle settings change
   const handleSettingsChange = (e) => {
     const { name, value, type } = e.target;
-    
+
     setSettings(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? !prev.autoSpeak : value
@@ -1261,621 +1301,801 @@ const generatePDFWithRetry = async (content, retries = 2) => {
   };
 
   const customStyles = `
+    /* === ULTIMATE READABLE NOTES DESIGN === */
+    
+    .assistant-message {
+      font-size: 16px;
+      line-height: 1.75;
+      color: #2d3748;
+      padding: 28px !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+      max-width: 100%;
+    }
+    .dark .assistant-message {
+      color: #f8fafc;
+    }
+    .dark .assistant-message * {
+      color: inherit !important;
+    }
+
+    /* Beautiful Headings */
+    .notes-h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a202c;
+      margin: 32px 0 16px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #6366f1;
+      letter-spacing: -0.03em;
+      line-height: 1.3;
+    }
+    .dark .notes-h1 { color: #ffffff; border-bottom-color: #818cf8; }
+
+    .notes-h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #2d3748;
+      margin: 28px 0 14px;
+      line-height: 1.4;
+    }
+    .dark .notes-h2 { color: #f8fafc; }
+
+    .notes-h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #4a5568;
+      margin: 20px 0 10px;
+      line-height: 1.4;
+    }
+    .dark .notes-h3 { color: #e2e8f0; }
+
+    /* Clean Bullet Lists */
+    .notes-li {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 10px;
+      padding-left: 0;
+      line-height: 1.7;
+    }
+    .notes-li .bullet {
+      width: 6px;
+      height: 6px;
+      background: #6366f1;
+      border-radius: 50%;
+      margin-top: 11px;
+      flex-shrink: 0;
+    }
+    .dark .notes-li .bullet {
+      background: #818cf8;
+    }
+    .notes-li .li-content {
+      flex: 1;
+    }
+
+    .notes-bold {
+      font-weight: 600;
+      color: #1a202c;
+    }
+    .dark .notes-bold { color: #ffffff; }
+
+    .notes-italic {
+      font-style: italic;
+      color: #4a5568;
+    }
+    .dark .notes-italic { color: #cbd5e1; }
+
+    .section-spacer {
+      height: 20px;
+    }
+
+    /* === BEAUTIFUL COLOR-CODED SECTIONS === */
+    
+    /* Topic Highlight */
     .ai-topic {
-      color: #1a5f7a; /* Darker Blue */
-      font-weight: bold;
-      font-size: 1.15em;
-      margin-top: 15px;
-      margin-bottom: 8px;
-      border-bottom: 2px solid #a7d7e8;
-      padding-bottom: 4px;
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      padding: 16px 20px;
+      border-radius: 12px;
+      border-left: 5px solid #6366f1;
+      margin: 28px 0 16px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+      color: #4338ca;
+      font-weight: 600;
+      font-size: 17px;
     }
+    .dark .ai-topic {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.08) 100%);
+      color: #c7d2fe !important;
+      border-left-color: #818cf8;
+    }
+    .ai-topic .topic-icon {
+      background: #6366f1;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin-right: 12px;
+    }
+    .dark .ai-topic .topic-icon {
+      background: #818cf8;
+    }
+
+    /* Example Box */
     .ai-example {
-      background-color: #e8f5e9; /* Light green */
-      border-left: 4px solid #4CAF50;
-      padding: 12px;
-      margin: 12px 0;
-      border-radius: 4px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 2px solid #86efac;
+      border-radius: 14px;
+      padding: 24px;
+      margin: 24px 0;
+      box-shadow: 0 2px 12px rgba(16, 185, 129, 0.08);
+      color: #065f46;
     }
+    .dark .ai-example {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.06) 100%);
+      border-color: rgba(52, 211, 153, 0.4);
+      color: #d1fae5 !important;
+    }
+    .ai-example .badge {
+      background: #10b981;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .dark .ai-example .badge {
+      background: #34d399;
+      color: #064e3b;
+    }
+    .ai-example .example-content {
+      color: inherit;
+      line-height: 1.7;
+    }
+
+    /* Important/Key Insight */
     .ai-important {
-      background-color: #fff3e0; /* Light orange */
-      border-left: 4px solid #ff9800;
-      padding: 12px;
-      margin: 12px 0;
-      border-radius: 4px;
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border: 2px solid #fcd34d;
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin: 24px 0;
+      box-shadow: 0 2px 12px rgba(245, 158, 11, 0.08);
+      color: #78350f;
     }
+    .dark .ai-important {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.06) 100%);
+      border-color: rgba(251, 191, 36, 0.4);
+      color: #fef3c7 !important;
+    }
+    .important-header {
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #d97706;
+      letter-spacing: 0.5px;
+    }
+    .dark .important-header {
+      color: #fbbf24 !important;
+    }
+
+    /* Question Box */
     .ai-question {
-      background-color: #f3e5f5; /* Light purple */
-      border-left: 4px solid #9c27b0;
-      padding: 12px;
-      margin: 12px 0;
-      border-radius: 4px;
+      background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+      border: 2px dashed #c084fc;
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin: 24px 0;
+      color: #6b21a8;
+      font-style: italic;
+      box-shadow: 0 2px 12px rgba(168, 85, 247, 0.08);
     }
+    .dark .ai-question {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.06) 100%);
+      color: #e9d5ff !important;
+      border-color: rgba(192, 132, 252, 0.4);
+    }
+
+    /* Formula Box */
     .ai-formula {
-      background-color: #f5f5f5; /* Light gray */
-      border: 1px solid #e0e_e0;
-      padding: 15px;
-      margin: 12px 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #7dd3fc;
+      padding: 24px;
+      border-radius: 14px;
+      margin: 24px 0;
+      font-family: 'Courier New', monospace;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border: 1px solid #334155;
+    }
+    .dark .ai-formula {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-color: #475569;
+    }
+    .formula-label {
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .dark .formula-label {
+      color: #cbd5e1;
+      border-bottom-color: #475569;
+    }
+    .formula-body {
+      font-size: 18px;
+      text-align: center;
+      padding: 12px 0;
+      color: #7dd3fc;
+    }
+    .dark .formula-body {
+      color: #bae6fd;
+    }
+    
+    /* === CODE BLOCKS === */
+    .code-block-container {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin: 24px 0;
+      background: #1e293b;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    .dark .code-block-container {
+      border-color: #475569;
+      background: #0f172a;
+    }
+    .code-block-header {
+      background: #0f172a;
+      border-bottom: 1px solid #334155;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dark .code-block-header {
+      background: #020617;
+      border-bottom-color: #475569;
+    }
+    .code-lang {
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .dark .code-lang {
+      color: #cbd5e1;
+    }
+    .copy-code-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px 8px;
       border-radius: 4px;
-      font-family: 'Courier New', Courier, monospace;
-      white-space: pre-wrap;
-      font-size: 1.05em;
+      transition: all 0.2s;
+    }
+    .copy-code-btn:hover {
+      background: #334155;
+      color: #e2e8f0;
+    }
+    .dark .copy-code-btn:hover {
+      background: #475569;
+      color: #f8fafc;
+    }
+    .code-block {
+      padding: 20px;
+      overflow-x: auto;
+      color: #e2e8f0;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      background: #1e293b;
+    }
+    .dark .code-block {
+      background: #0f172a;
+      color: #f1f5f9;
+    }
+    
+    .inline-code {
+      background: #f1f5f9;
+      color: #dc2626;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+    }
+    .dark .inline-code {
+      background: #1e293b;
+      color: #fca5a5;
+      border-color: #475569;
     }
   `;
 
   return (
     <>
-    <style>{customStyles}</style>
-    <div className="ai-assistant-page">
-      <div className="container">
-        <div className="row">
-          <div className="col-lg-4">
-            <motion.div 
-              className="assistant-sidebar"
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="sidebar-header">
-                <h2><i className="fas fa-robot"></i> Quick AI</h2>
-                <div className="mode-toggles">
-                  <div className="mode-toggle">
-                    <span className={!isAdvancedMode ? 'active' : ''}>Basic</span>
-                    <label className="switch">
-                      <input 
-                        type="checkbox" 
-                        checked={isAdvancedMode}
-                        onChange={() => setIsAdvancedMode(!isAdvancedMode)}
-                      />
-                      <span className="slider"></span>
-                    </label>
-                    <span className={isAdvancedMode ? 'active' : ''}>Advanced</span>
-                  </div>
-                  <div className="mode-toggle">
-                    <span className={!isTutorMode ? 'active' : ''}>Notes</span>
-                    <label className="switch">
-                      <input 
-                        type="checkbox" 
-                        checked={isTutorMode}
-                        onChange={() => setIsTutorMode(!isTutorMode)}
-                      />
-                      <span className="slider tutor"></span>
-                    </label>
-                    <span className={isTutorMode ? 'active' : ''}>Tutor</span>
-                  </div>
-                </div>
-              </div>
-              
-              <AnimatePresence>
-                {showDetailsForm ? (
-                  <motion.div 
-                    className="details-form"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <h3>Enter Your Details</h3>
-      
-                    {/* Advanced Input Section - Only shown when advanced mode is on */}
-                    {isAdvancedMode && (
-                      <motion.div
-                        className="advanced-input-container"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <div className="form-group full-width">
-                          <label>
-                            <i className="fas fa-magic"></i> Describe what you need
-                            <span className="hint">(I'll auto-fill the form below)</span>
-                          </label>
-      
-                          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                            <textarea
-                              value={advancedInput}
-                              onChange={(e) => setAdvancedInput(e.target.value)}
-                              placeholder="Example: generate notes of numerical method for BCA 2nd semester"
-                              rows={3}
-                              style={{ flex: 1 }}
-                            />
-                            <button
-                              type="button"
-                              onClick={startListening}
-                              className="mic-btn"
-                              title="Speak your query"
-                            >
-                              🎤
-                            </button>
-                          </div>
-      
-                          <div className="advanced-actions">
-                            <button 
-                              type="button" 
-                              className="parse-btn"
-                              onClick={handleAdvancedParse}
-                              disabled={!advancedInput.trim()}
-                            >
-                              <i className="fas fa-sparkles"></i> Auto-Fill Form
-                            </button>
-                            <button 
-                              type="button" 
-                              className="example-btn"
-                              onClick={() => setAdvancedInput("generate notes of numerical method for BCA 2nd sem")}
-                            >
-                              <i className="fas fa-lightbulb"></i> Load Example
-                            </button>
-                          </div>
-                        </div>
-                        <div className="divider"></div>
-                      </motion.div>
-                    )}
-      
-      
-                    <div className="form-grid">
-                      <div className="form-group">
-                        <label>Course/Program*</label>
-                        <input
-                          type="text"
-                          name="course"
-                          value={userDetails.course}
-                          onChange={handleDetailChange}
-                          className={errors.course ? 'error' : ''}
-                        />
-                        {errors.course && <span className="error-message">{errors.course}</span>}
-                      </div>
-                      
-                      <div className="form-group">
-                        <label>Subject*</label>
-                        <input
-                          type="text"
-                          name="subject"
-                          value={userDetails.subject}
-                          onChange={handleDetailChange}
-                          className={errors.subject ? 'error' : ''}
-                        />
-                        {errors.subject && <span className="error-message">{errors.subject}</span>}
-                      </div>        
-                      <div className="form-group">
-                        <label>Class Level</label>
-                        <input
-                          type="text"
-                          name="classLevel"
-                          value={userDetails.classLevel}
-                          onChange={handleDetailChange}
-                          className={errors.classLevel ? 'error' : ''}
-                        />
-                        {errors.classLevel && <span className="error-message">{errors.classLevel}</span>}
-                      </div>
-                      
-                      <div className="form-group">
-                        <label>Year/Semester (e.g., 2nd/4th)</label>
-                        <input
-                          type="text"
-                          name="yearSem"
-                          value={userDetails.yearSem}
-                          onChange={handleDetailChange}
-                          className={errors.yearSem ? 'error' : ''}
-                          placeholder="e.g., 2nd/4th"
-                        />
-                        {errors.yearSem && <span className="error-message">{errors.yearSem}</span>}
-                      </div>
-                      
-                      <div className="form-group full-width">
-                        <label>Topic/Query</label>
-                        <textarea
-                          name="importantTopics"
-                          value={userDetails.importantTopics}
-                          onChange={handleDetailChange}
-                          placeholder="e.g., What is photosynthesis?"
-                        />
-                      </div>
-                      
-                      {!isTutorMode && <div className="form-group full-width">
-                        <label>Format Preference</label>
-                        <select
-                          name="formatPreference"
-                          value={userDetails.formatPreference}
-                          onChange={handleDetailChange}
-                        >
-                          <option value="bullet-points">Bullet Points</option>
-                          <option value="paragraph">Paragraph</option>
-                          <option value="outline">Outline</option>
-                          <option value="qna">Q&A Format</option>
-                        </select>
-                      </div>}
-                    </div>
-                                  
-                                  <motion.button 
-                                    className="submit-details-btn"
-                                    onClick={submitUserDetails}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    disabled={Object.values(errors).some(err => err) || 
-                                             !userDetails.course || 
-                                             !userDetails.subject}
-                                  >
-                                    Start Session
-                                  </motion.button>
-                                </motion.div>
-                ) : (
-                  <>
-                    {isTutorMode ? (
-                      <motion.div 
-                        className="quick-actions"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        <h3>Tutor Actions</h3>
-                        <div className="action-buttons">
-                          <button onClick={() => handleTutorAction('key_concepts')}>
-                            <i className="fas fa-lightbulb"></i> Key Concepts
-                          </button>
-                          <button onClick={() => handleTutorAction('summary')}>
-                            <i className="fas fa-book"></i> Summary
-                          </button>
-                          <button onClick={() => handleTutorAction('formulas')}>
-                            <i className="fas fa-square-root-alt"></i> Formulas
-                          </button>
-                          <button onClick={() => handleTutorAction('exam_prep')}>
-                            <i className="fas fa-graduation-cap"></i> Exam Prep
-                          </button>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div 
-                        className="quick-actions"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        <h3>Quick Prompts</h3>
-                        <div className="action-buttons">
-                          <button onClick={() => setMessage(`Explain key concepts in ${userDetails.subject}`)}>
-                            <i className="fas fa-lightbulb"></i> Key Concepts
-                          </button>
-                          <button onClick={() => setMessage(`Create summary of ${userDetails.subject} syllabus`)}>
-                            <i className="fas fa-book"></i> Syllabus Summary
-                          </button>
-                          <button onClick={() => setMessage(`Important formulas in ${userDetails.subject}`)}>
-                            <i className="fas fa-square-root-alt"></i> Formulas
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                    
-                    <motion.div 
-                      className="download-section"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      <div className="format-selector">
-                        <motion.button 
-                          className={`format-btn ${exportFormat === 'pdf' ? 'active' : ''}`}
-                          onClick={() => setExportFormat('pdf')}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <i className="fas fa-file-pdf"></i> PDF
-                        </motion.button>
-                        <motion.button 
-                          className={`format-btn ${exportFormat === 'docx' ? 'active' : ''}`}
-                          onClick={() => setExportFormat('docx')}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <i className="fas fa-file-word"></i> Word
-                        </motion.button>
-                      </div>
-                      
-                      <motion.button 
-                        className="download-btn"
-                        onClick={downloadNotes}
-                        disabled={chatHistory.length <= 1 || isExporting}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {isExporting ? (
-                          <><i className="fas fa-spinner fa-spin"></i> Exporting...</>
-                        ) : (
-                          <><i className="fas fa-download"></i> Download Notes</>
-                        )}
-                      </motion.button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
-
-          <div className="col-lg-8">
-            <motion.div 
-              className="chat-container"
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <div className="chat-header">
-                <div className="assistant-info">
-                  <div className="assistant-avatar">
-                    <i className="fas fa-robot"></i>
-                  </div>
-                  <div className="assistant-details">
-                    <h3>{userDetails.subject || 'Quick Notes'} Assistant</h3>
-                    <p className={`mode-indicator ${isAdvancedMode ? 'advanced' : 'basic'}`}>
-                      {isAdvancedMode ? 'Advanced Mode' : 'Basic Mode'}
-                    </p>
-                  </div>
-                </div>
-                <div className="chat-actions">
-                  {!showDetailsForm && (
-                    <>
-                      <motion.button 
-                        className="action-btn"
-                        onClick={toggleSpeak}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        title={isSpeaking ? 'Stop speaking' : 'Read aloud'}
-                      >
-                        <i className={`fas ${isSpeaking ? 'fa-stop' : 'fa-volume-up'}`}></i>
-                      </motion.button>
-                      
-                      <motion.button 
-                        className="action-btn"
-                        onClick={toggleListening}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        title={isListening ? 'Stop listening' : 'Voice input'}
-                      >
-                        <i className={`fas ${isListening ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
-                      </motion.button>
-                      
-                      <motion.button 
-                        className="action-btn"
-                        onClick={() => setShowSettings(!showSettings)}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        title="Settings"
-                      >
-                        <i className="fas fa-cog"></i>
-                      </motion.button>
-                      
-                      <motion.button 
-                        className="action-btn"
-                        onClick={() => setShowDetailsForm(true)}
-                        whileHover={{ rotate: 15 }}
-                        whileTap={{ scale: 0.9 }}
-                        title="Edit Details"
-                      >
-                        <i className="fas fa-user-edit"></i>
-                      </motion.button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Settings Panel */}
-              <AnimatePresence>
-                {showSettings && (
-                  <motion.div 
-                    className="settings-panel"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <h3>Settings</h3>
-                    
-                    <div className="setting-group">
-                      <label>Speech Rate</label>
-                      <input
-                        type="range"
-                        name="speechRate"
-                        min="0.5"
-                        max="2"
-                        step="0.1"
-                        value={settings.speechRate}
-                        onChange={handleSettingsChange}
-                      />
-                      <span>{settings.speechRate}x</span>
-                    </div>
-                    
-                    <div className="setting-group">
-                      <label>Speech Pitch</label>
-                      <input
-                        type="range"
-                        name="speechPitch"
-                        min="0.5"
-                        max="2"
-                        step="0.1"
-                        value={settings.speechPitch}
-                        onChange={handleSettingsChange}
-                      />
-                      <span>{settings.speechPitch}x</span>
-                    </div>
-                    
-                    <div className="setting-group">
-                      <label>
+      <style>{customStyles}</style>
+      <div className="ai-assistant-page">
+        <div className="container">
+          <div className="assistant-layout">
+            <div className="layout-sidebar">
+              <motion.div
+                className="assistant-sidebar"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="sidebar-header">
+                  <h2><i className="fas fa-brain"></i> Nogen AI</h2>
+                  <p className="sidebar-tagline">Academic Intelligence Redefined</p>
+                  <div className="mode-toggles">
+                    <div className="mode-toggle">
+                      <span className={!isAdvancedMode ? 'active' : ''}>Basic</span>
+                      <label className="switch">
                         <input
                           type="checkbox"
-                          name="autoSpeak"
-                          checked={settings.autoSpeak}
-                          onChange={handleSettingsChange}
+                          checked={isAdvancedMode}
+                          onChange={() => setIsAdvancedMode(!isAdvancedMode)}
                         />
-                        Auto-read messages
+                        <span className="slider"></span>
                       </label>
+                      <span className={isAdvancedMode ? 'active' : ''}>Advanced</span>
                     </div>
-                    
-                    <div className="setting-group">
-                      <label>Theme</label>
+                    <div className="mode-toggle">
+                      <span className={!isTutorMode ? 'active' : ''}>Notes</span>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          checked={isTutorMode}
+                          onChange={() => setIsTutorMode(!isTutorMode)}
+                        />
+                        <span className="slider tutor"></span>
+                      </label>
+                      <span className={isTutorMode ? 'active' : ''}>Tutor</span>
+                    </div>
+
+                    <div className="model-selector-container">
+                      <label>AI Model Intelligence</label>
                       <select
-                        name="theme"
-                        value={settings.theme}
-                        onChange={handleSettingsChange}
+                        className="model-select"
+                        value={selectedModel}
+                        onChange={(e) => setSelectedModel(e.target.value)}
                       >
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
+                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Most Intelligent)</option>
+                        <option value="llama-3.1-70b-versatile">Llama 3.1 70B (Fast & Reliable)</option>
+                        <option value="mixtral-8x7b-32768">Mixtral 8x7B (Balanced)</option>
+                        <option value="llama3-8b-8192">Llama 3 8B (Super Fast)</option>
                       </select>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </div>
+                </div>
 
-              <div className="chat-messages">
                 <AnimatePresence>
-                  {chatHistory.map((chat) => (
+                  {showDetailsForm ? (
                     <motion.div
-                      key={chat.id}
-                      className={`message ${chat.type}`}
+                      className="details-form"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: chat.type === 'user' ? 50 : -50 }}
+                      exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      {chat.type === 'assistant' && (
-                        <div className="message-avatar">
-                          <i className="fas fa-robot"></i>
-                        </div>
-                      )}
-                      <div className="message-content">
-                        {chat.type === 'assistant' ? (
-                          <div className="assistant-message">
-                            <div className="message-text" dangerouslySetInnerHTML={{ 
-                              __html: formatMessage(chat.text) 
-                            }} />
-                            
-                            {/* Display generated images for this message */}
-                            {generatedImages.length > 0 && chat.id === chatHistory[chatHistory.length - 1].id && (
-                              <div className="generated-images">
-                                {generatedImages.map((img, index) => (
-                                  <img 
-                                    key={index}
-                                    src={img.url} 
-                                    alt={img.altText || 'Generated diagram'}
-                                    className="note-image"
-                                  />
-                                ))}
-                              </div>
-                            )}
-                          {/*  Show this button only if notes are generated */}
-                        {messages.some((m) => m.role === 'assistant') && (
-                          <button onClick={generateNotesAndQuiz} className="quiz-btn">
-                             Take Quiz Based on These Notes
-                          </button>
-                        )}
+                      <h3>Enter Your Details</h3>
 
-                        {/*  Show "Start Quiz" button only after notes are generated */}
-                        {showQuizButton && (
-                          <motion.div
-                            className="chat-header"
-                            onClick={() => navigate('/quiz')} // Navigate to Quiz page
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            Start Quiz
-                          </motion.div>
-                        )}
-                       
-                            <div className="message-timestamp">
-                              {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {/* Advanced Input Section - Only shown when advanced mode is on */}
+                      {isAdvancedMode && (
+                        <motion.div
+                          className="advanced-input-container"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <div className="form-group full-width">
+                            <label>
+                              <i className="fas fa-magic"></i> Describe what you need
+                              <span className="hint">(I'll auto-fill the form below)</span>
+                            </label>
+
+                            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                              <textarea
+                                value={advancedInput}
+                                onChange={(e) => setAdvancedInput(e.target.value)}
+                                placeholder="Example: generate notes of numerical method for BCA 2nd semester"
+                                rows={3}
+                                style={{ flex: 1 }}
+                              />
+                              <button
+                                type="button"
+                                onClick={toggleListening}
+                                className="mic-btn"
+                                title="Speak your query"
+                              >
+                                🎤
+                              </button>
+                            </div>
+
+                            <div className="advanced-actions">
+                              <button
+                                type="button"
+                                className="parse-btn"
+                                onClick={handleAdvancedParse}
+                                disabled={!advancedInput.trim()}
+                              >
+                                <i className="fas fa-sparkles"></i> Auto-Fill Form
+                              </button>
+                              <button
+                                type="button"
+                                className="example-btn"
+                                onClick={() => setAdvancedInput("generate notes of numerical method for BCA 2nd sem")}
+                              >
+                                <i className="fas fa-lightbulb"></i> Load Example
+                              </button>
                             </div>
                           </div>
-                        ) : (
-                          <>
-                            <p>{chat.text}</p>
-                            <div className="message-timestamp">
-                              {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          </>
+                          <div className="divider"></div>
+                        </motion.div>
+                      )}
+
+
+                      <div className="form-grid">
+                        <div className="form-group">
+                          <label>Course/Program*</label>
+                          <input
+                            type="text"
+                            name="course"
+                            value={userDetails.course}
+                            onChange={handleDetailChange}
+                            className={errors.course ? 'error' : ''}
+                          />
+                          {errors.course && <span className="error-message">{errors.course}</span>}
+                        </div>
+
+                        <div className="form-group">
+                          <label>Subject*</label>
+                          <input
+                            type="text"
+                            name="subject"
+                            value={userDetails.subject}
+                            onChange={handleDetailChange}
+                            className={errors.subject ? 'error' : ''}
+                          />
+                          {errors.subject && <span className="error-message">{errors.subject}</span>}
+                        </div>
+                        <div className="form-group">
+                          <label>Class Level</label>
+                          <input
+                            type="text"
+                            name="classLevel"
+                            value={userDetails.classLevel}
+                            onChange={handleDetailChange}
+                            className={errors.classLevel ? 'error' : ''}
+                          />
+                          {errors.classLevel && <span className="error-message">{errors.classLevel}</span>}
+                        </div>
+
+                        <div className="form-group">
+                          <label>Year/Semester (e.g., 2nd/4th)</label>
+                          <input
+                            type="text"
+                            name="yearSem"
+                            value={userDetails.yearSem}
+                            onChange={handleDetailChange}
+                            className={errors.yearSem ? 'error' : ''}
+                            placeholder="e.g., 2nd/4th"
+                          />
+                          {errors.yearSem && <span className="error-message">{errors.yearSem}</span>}
+                        </div>
+
+                        <div className="form-group full-width">
+                          <label>Topic/Query</label>
+                          <textarea
+                            name="importantTopics"
+                            value={userDetails.importantTopics}
+                            onChange={handleDetailChange}
+                            placeholder="e.g., What is photosynthesis?"
+                          />
+                        </div>
+
+                        {!isTutorMode && <div className="form-group full-width">
+                          <label>Format Preference</label>
+                          <select
+                            name="formatPreference"
+                            value={userDetails.formatPreference}
+                            onChange={handleDetailChange}
+                          >
+                            <option value="bullet-points">Bullet Points</option>
+                            <option value="paragraph">Paragraph</option>
+                            <option value="outline">Outline</option>
+                            <option value="qna">Q&A Format</option>
+                          </select>
+                        </div>}
+                      </div>
+
+                      <motion.button
+                        className="submit-details-btn"
+                        onClick={submitUserDetails}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        disabled={Object.values(errors).some(err => err) ||
+                          !userDetails.course ||
+                          !userDetails.subject}
+                      >
+                        Start Session
+                      </motion.button>
+                    </motion.div>
+                  ) : (
+                    <>
+                      {isTutorMode ? (
+                        <motion.div
+                          className="quick-actions"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          <h3>Tutor Actions</h3>
+                          <div className="action-buttons">
+                            <button onClick={() => handleTutorAction('key_concepts')}>
+                              <i className="fas fa-lightbulb"></i> Key Concepts
+                            </button>
+                            <button onClick={() => handleTutorAction('summary')}>
+                              <i className="fas fa-book"></i> Summary
+                            </button>
+                            <button onClick={() => handleTutorAction('formulas')}>
+                              <i className="fas fa-square-root-alt"></i> Formulas
+                            </button>
+                            <button onClick={() => handleTutorAction('exam_prep')}>
+                              <i className="fas fa-graduation-cap"></i> Exam Prep
+                            </button>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          className="quick-actions"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          <h3>Quick Prompts</h3>
+                          <div className="action-buttons">
+                            <button onClick={() => setMessage(`Explain key concepts in ${userDetails.subject}`)}>
+                              <i className="fas fa-lightbulb"></i> Key Concepts
+                            </button>
+                            <button onClick={() => setMessage(`Create summary of ${userDetails.subject} syllabus`)}>
+                              <i className="fas fa-book"></i> Syllabus Summary
+                            </button>
+                            <button onClick={() => setMessage(`Important formulas in ${userDetails.subject}`)}>
+                              <i className="fas fa-square-root-alt"></i> Formulas
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      <motion.div
+                        className="download-section"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <div className="format-selector">
+                          <motion.button
+                            className={`format-btn ${exportFormat === 'pdf' ? 'active' : ''}`}
+                            onClick={() => setExportFormat('pdf')}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <i className="fas fa-file-pdf"></i> PDF
+                          </motion.button>
+                          <motion.button
+                            className={`format-btn ${exportFormat === 'docx' ? 'active' : ''}`}
+                            onClick={() => setExportFormat('docx')}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <i className="fas fa-file-word"></i> Word
+                          </motion.button>
+                        </div>
+
+                        <motion.button
+                          className="download-btn"
+                          onClick={downloadNotes}
+                          disabled={chatHistory.length <= 1 || isExporting}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {isExporting ? (
+                            <><i className="fas fa-spinner fa-spin"></i> Exporting...</>
+                          ) : (
+                            <><i className="fas fa-download"></i> Download Notes</>
+                          )}
+                        </motion.button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </div>
+
+            <div className="layout-main">
+              <motion.div
+                className="chat-container"
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <div className="chat-header">
+                  <div className="header-user">
+                    <div className="header-avatar">
+                      <i className="fas fa-brain"></i>
+                    </div>
+                    <div className="header-info">
+                      <h4>Nogen AI Assistant</h4>
+                      <p><i className="fas fa-circle"></i> Always Active</p>
+                    </div>
+                  </div>
+                  <div className="header-actions">
+                    <button className="mic-btn" onClick={toggleListening} title="Voice Input">
+                      <i className={`fas ${isListening ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
+                    </button>
+                    {showQuizButton && (
+                      <motion.button
+                        className="quiz-btn"
+                        onClick={() => navigate('/quiz')}
+                        style={{ marginTop: 0, marginLeft: '10px' }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <i className="fas fa-graduation-cap"></i> Practice Quiz
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="chat-messages" id="chat-messages">
+                  <AnimatePresence>
+                    {chatHistory.map((chat) => (
+                      <motion.div
+                        key={chat.id}
+                        className={`message ${chat.type}`}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        {chat.type === 'assistant' && (
+                          <div className="header-avatar" style={{ width: '32px', height: '32px', fontSize: '1rem', flexShrink: 0 }}>
+                            <i className="fas fa-robot"></i>
+                          </div>
                         )}
+                        <div className="message-content">
+                          {chat.type === 'assistant' ? (
+                            <div className="assistant-message">
+                              <div className="message-text" dangerouslySetInnerHTML={{
+                                __html: formatMessage(chat.text)
+                              }} />
+
+                              {/* Display generated images for this message */}
+                              {generatedImages.length > 0 && chat.id === chatHistory[chatHistory.length - 1].id && (
+                                <div className="generated-images">
+                                  {generatedImages.map((img, index) => (
+                                    <img
+                                      key={index}
+                                      src={img.url}
+                                      alt={img.altText || 'Generated diagram'}
+                                      className="note-image"
+                                    />
+                                  ))}
+                                </div>
+                              )}
+
+                              <div className="message-timestamp" style={{ fontSize: '0.7rem', marginTop: '8px', opacity: 0.6 }}>
+                                {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p>{chat.text}</p>
+                              <div className="message-timestamp">
+                                {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  {isTyping && (
+                    <motion.div
+                      className="message assistant typing"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <div className="message-avatar">
+                        <i className="fas fa-robot"></i>
+                      </div>
+                      <div className="message-content">
+                        <div className="typing-indicator">
+                          <motion.span
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ repeat: Infinity, duration: 1, delay: 0 }}
+                          />
+                          <motion.span
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
+                          />
+                          <motion.span
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
+                          />
+                        </div>
                       </div>
                     </motion.div>
-                  ))}
-                </AnimatePresence>
-                
-                {isTyping && (
-                  <motion.div 
-                    className="message assistant typing"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  >
-                    <div className="message-avatar">
-                      <i className="fas fa-robot"></i>
-                    </div>
-                    <div className="message-content">
-                      <div className="typing-indicator">
-                        <motion.span
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ repeat: Infinity, duration: 1, delay: 0 }}
-                        />
-                        <motion.span
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                        />
-                        <motion.span
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
 
-              {/* //button show quize 
+                {/* //button show quize 
 
               <button onClick={() => setShowQuiz(true)} className="start-quiz-btn">
                 Start Quiz
               </button> */}
 
 
-              {!showDetailsForm && (
-                <motion.form 
-                  className="chat-input"
-                  onSubmit={handleSubmit}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <div className="input-container">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder={`Ask me anything about ${userDetails.subject}...`}
-                      disabled={isTyping}
-                    />
-                    <motion.button                                                                                                                                                                                   
-                      type="submit" 
-                      className="send-btn"
-                      disabled={!message.trim() || isTyping}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                    
-                      {isTyping ? (
-                        <i className="fas fa-circle-notch fa-spin"></i>
-                      ) : (
-                        <motion.i 
-                          className="fas fa-paper-plane"
-                          whileHover={{ rotate: 15 }}
-                        />
-                      )}
-                    </motion.button>
-                  </div>
-                </motion.form>
-              )}
-            </motion.div>
+                {!showDetailsForm && (
+                  <motion.form
+                    className="chat-input"
+                    onSubmit={handleSubmit}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <div className="input-wrapper">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder={`Message Nogen AI about ${userDetails.subject || 'your studies'}...`}
+                        disabled={isTyping}
+                      />
+                      <motion.button
+                        type="submit"
+                        className="send-btn"
+                        disabled={!message.trim() || isTyping}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        {isTyping ? (
+                          <i className="fas fa-circle-notch fa-spin"></i>
+                        ) : (
+                          <i className="fas fa-arrow-up"></i>
+                        )}
+                      </motion.button>
+                    </div>
+                  </motion.form>
+                )}
+              </motion.div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
     </>
   );
 };
