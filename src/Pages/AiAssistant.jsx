@@ -6,12 +6,15 @@ import { saveAs } from 'file-saver';
 import './AiAssistant.css';
 import { useNavigate } from 'react-router-dom';
 import QuizComponent from '../components/QuizComponent';
+import { useAuth } from '../context/AuthContext'; // Corrected path from 'contaxt' to 'context'
 
 const boldFont = StandardFonts.HelveticaBold;
 
 const AiAssistant = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Get user from context
   const [isQuizStarted, setIsQuizStarted] = useState(false);
+  const [showViewOptions, setShowViewOptions] = useState(false); // Dropdown state
   // State declarations
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([
@@ -130,6 +133,38 @@ const AiAssistant = () => {
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
   const speechSynthesisRef = useRef(null);
+
+  // State for Slide View
+  const [showSlideView, setShowSlideView] = useState(false);
+  const [slideContent, setSlideContent] = useState([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+
+  // Handle View Options (Slides/Voice) with Plan Check
+  const handleViewOption = (option) => {
+    // Check if user has premium/student plan
+    // Assuming 'student' or 'premium' are valid plan identifiers
+    const hasAccess = user?.plan === 'student' || user?.plan === 'premium';
+
+    if (!hasAccess) {
+      // If not unlocked, redirect to pricing
+      navigate('/pricing');
+      return;
+    }
+
+    setShowViewOptions(false);
+
+    // Get the last assistant message
+    const lastMsg = chatHistory.filter(c => c.type === 'assistant').pop();
+    if (!lastMsg) return;
+
+    if (option === 'slides') {
+      openSlideView(lastMsg.text);
+    } else if (option === 'voice-slides') {
+      openSlideView(lastMsg.text);
+      // Small delay to let slides open
+      setTimeout(() => speak(lastMsg.text), 500);
+    }
+  };
 
   useEffect(() => {
     const isSpeechRecognitionSupported = 'webkitSpeechRecognition' in window;
@@ -529,167 +564,112 @@ Format requirements:
     sendQueryToBackend(topic, requestType);
   };
 
-  const sendQueryToBackend = async (query, requestType = '') => {
+  // Typing Indicator Component
+  const TypingIndicator = () => (
+    <div className="message assistant">
+      <div className="assistant-message typing-indicator">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  );
 
+  const sendQueryToBackend = async (query, requestType = '') => {
     setIsTyping(true);
+    // Add a temporary loading message if needed, or just use isTyping state
 
     try {
-
       let endpoint = `${process.env.REACT_APP_API_URL}/generate`;
-
       let requestBody;
 
-
-
       if (isTutorMode) {
-
         endpoint = `${process.env.REACT_APP_API_URL}/generate/tutor`;
 
-
-
         // Exclude the last message (current user query) from history
+        let historyForBackend = chatHistory
+          .filter(msg => msg.id) // Filter out any malformed messages
+          .map(msg => ({
+            role: msg.type === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.text }]
+          }));
 
-        let historyForBackend = chatHistory.slice(0, -1).map(msg => ({
-
-          role: msg.type === 'user' ? 'user' : 'model',
-
-          parts: [{ text: msg.text }]
-
-        }));
-
-
-
-        // Find the index of the first user message
-
-        const firstUserIndex = historyForBackend.findIndex(msg => msg.role === 'user');
-
-
-
-        // If a user message is found, slice from there, otherwise send empty history
-
-        if (firstUserIndex !== -1) {
-
-          historyForBackend = historyForBackend.slice(firstUserIndex);
-
-        } else {
-
-          historyForBackend = [];
-
+        // Limit history to last 10 turns to avoid token limits
+        if (historyForBackend.length > 20) {
+          historyForBackend = historyForBackend.slice(-20);
         }
 
-
-
         requestBody = {
-
           topic: query,
-
           subject: userDetails.subject || 'General',
-
           history: historyForBackend,
-
           requestType: requestType,
-
-          userQuery: query, // The user's most recent message/query
+          userQuery: query,
           requestedModel: selectedModel
         };
-
       } else {
-
-        // Prepare the complete request body for notes generation
-
         requestBody = {
-
           query: query,
-
           subject: userDetails.subject || 'General',
-
           course: userDetails.course || 'Unknown Course',
-
           classLevel: userDetails.classLevel || '',
-
           yearSem: userDetails.yearSem || '',
-
           importantTopics: userDetails.importantTopics || '',
-
           formatPreference: userDetails.formatPreference || 'bullet-points',
-
           advancedMode: isAdvancedMode,
-
-          userId: "current-user-id",
+          userId: "current-user-id", // Should be replaced by actual user context if available
           requestedModel: selectedModel
         };
-
       }
 
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Content-Type': 'application/json'
+      };
 
-
-
-
-
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
       const response = await fetch(endpoint, {
-
         method: 'POST',
-
-        headers: {
-
-          'Content-Type': 'application/json'
-
-        },
-
+        headers: headers,
+        credentials: 'include', // Best practice to include cookies if they exist
         body: JSON.stringify(requestBody)
-
       });
 
-
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        throw new Error("Received non-JSON response from server");
+      }
 
       if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch (e) {
-          errorData = { error: 'Unknown server error' };
-        }
-        console.error("Backend Error:", errorData);
-        throw new Error(errorData.error || errorData.message || 'Request failed');
+        throw new Error(data.error || data.message || 'Request failed');
       }
-
-
-
-      const data = await response.json();
-
-
-
-
-
-      // Defensive check for the response data
 
       if (data?.data && typeof data.data === 'string') {
-
         addMessage('assistant', data.data, data.modelUsed);
-
       } else {
-
         addMessage('assistant', "❗ I received an empty response. Please try again.");
-
       }
 
-
-
-
-
     } catch (error) {
-
-      addMessage('assistant', `Error: ${error.message}`);
-
       console.error('API Error Details:', error);
+      let errorMsg = "Sorry, I encountered an issue. Please try again.";
 
+      if (error.message.includes("Cannot read properties of undefined")) {
+        errorMsg = "System Error: Please ensure you are logged in.";
+      } else if (error.message) {
+        errorMsg = `Error: ${error.message}`;
+      }
+
+      addMessage('assistant', errorMsg);
     } finally {
-
       setIsTyping(false);
-
     }
-
   };
 
 
@@ -1270,18 +1250,18 @@ Format requirements:
   }, []);
 
   // Toggle speaking with better state management
-  const toggleSpeak = useCallback(() => {
+  const toggleSpeak = useCallback((textToSpeak = null) => {
     try {
       if (isSpeaking) {
         window.speechSynthesis.cancel();
         setIsSpeaking(false);
       } else {
-        const lastAssistantMessage = chatHistory
+        const text = textToSpeak || chatHistory
           .filter(chat => chat.type === 'assistant')
           .slice(-1)[0]?.text;
 
-        if (lastAssistantMessage) {
-          speak(lastAssistantMessage);
+        if (text) {
+          speak(text);
         }
       }
     } catch (error) {
@@ -1289,6 +1269,15 @@ Format requirements:
       setIsSpeaking(false);
     }
   }, [isSpeaking, chatHistory, speak]);
+
+  // Open Slide View Logic
+  const openSlideView = useCallback((text) => {
+    // Split text into slides based on headers or double newlines
+    const slides = text.split(/\n\s*\n/).filter(s => s.trim().length > 0);
+    setSlideContent(slides);
+    setCurrentSlideIndex(0);
+    setShowSlideView(true);
+  }, []);
 
   // Handle settings change
   const handleSettingsChange = (e) => {
@@ -1952,6 +1941,30 @@ Format requirements:
                     </div>
                   </div>
                   <div className="header-actions">
+                    {/* View Options Dropdown */}
+                    <div className="view-options-wrapper" style={{ position: 'relative', display: 'inline-block', marginRight: '10px' }}>
+                      <button
+                        className="view-options-btn"
+                        onClick={() => setShowViewOptions(!showViewOptions)}
+                        title="View Options"
+                      >
+                        <i className="fas fa-eye"></i> View Options
+                      </button>
+
+                      {showViewOptions && (
+                        <div className="view-options-dropdown">
+                          <div onClick={() => handleViewOption('slides')} className="dropdown-item">
+                            <i className="fas fa-presentation"></i> View as Slides
+                            {!(user?.plan === 'student' || user?.plan === 'premium') && <i className="fas fa-lock" style={{ marginLeft: 'auto', fontSize: '0.8em', opacity: 0.7 }}></i>}
+                          </div>
+                          <div onClick={() => handleViewOption('voice-slides')} className="dropdown-item">
+                            <i className="fas fa-chalkboard-teacher"></i> Slides + Voice
+                            {!(user?.plan === 'student' || user?.plan === 'premium') && <i className="fas fa-lock" style={{ marginLeft: 'auto', fontSize: '0.8em', opacity: 0.7 }}></i>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <button className="mic-btn" onClick={toggleListening} title="Voice Input">
                       <i className={`fas ${isListening ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
                     </button>
@@ -2031,18 +2044,9 @@ Format requirements:
                       </div>
                       <div className="message-content">
                         <div className="typing-indicator">
-                          <motion.span
-                            animate={{ y: [0, -5, 0] }}
-                            transition={{ repeat: Infinity, duration: 1, delay: 0 }}
-                          />
-                          <motion.span
-                            animate={{ y: [0, -5, 0] }}
-                            transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                          />
-                          <motion.span
-                            animate={{ y: [0, -5, 0] }}
-                            transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                          />
+                          <span></span>
+                          <span></span>
+                          <span></span>
                         </div>
                       </div>
                     </motion.div>
@@ -2096,6 +2100,42 @@ Format requirements:
           </div>
         </div>
       </div >
+      {/* Slide View Overlay */}
+      {showSlideView && (
+        <div className="slide-view-overlay">
+          <div className="slide-content">
+            <button className="close-slide-btn" onClick={() => setShowSlideView(false)}>
+              <i className="fas fa-times"></i>
+            </button>
+
+            <div className="slide-body" style={{ minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div dangerouslySetInnerHTML={{ __html: formatMessage(slideContent[currentSlideIndex] || '') }} />
+            </div>
+
+            <div className="slide-controls">
+              <button
+                disabled={currentSlideIndex === 0}
+                onClick={() => setCurrentSlideIndex(prev => Math.max(0, prev - 1))}
+                className="quiz-btn"
+                style={{ background: currentSlideIndex === 0 ? '#cbd5e1' : 'var(--nogen-primary)' }}
+              >
+                Previous
+              </button>
+              <span style={{ color: 'var(--text-primary)', alignSelf: 'center', fontWeight: 'bold' }}>
+                {currentSlideIndex + 1} / {slideContent.length}
+              </span>
+              <button
+                disabled={currentSlideIndex === slideContent.length - 1}
+                onClick={() => setCurrentSlideIndex(prev => Math.min(slideContent.length - 1, prev + 1))}
+                className="quiz-btn"
+                style={{ background: currentSlideIndex === slideContent.length - 1 ? '#cbd5e1' : 'var(--nogen-primary)' }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
