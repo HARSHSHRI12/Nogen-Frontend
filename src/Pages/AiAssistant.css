@@ -504,14 +504,171 @@
     align-self: flex-start;
 }
 
+/* Zoomed out effect & High Contrast Text */
 .assistant-message {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    padding: 20px 24px;
-    border-radius: 20px;
+    padding: 14px 18px;
+    /* Further reduced padding */
+    border-radius: 16px;
     border-top-left-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-    line-height: 1.7;
+    line-height: 1.5;
+    /* More compact line height */
+    font-size: 0.9rem;
+    /* Smaller font size (approx 14.4px) */
+    color: #000000 !important;
+}
+
+/* Override default mic-btn for the View Options button */
+.view-options-btn {
+    background: var(--nogen-gradient) !important;
+    /* Purple/Pink Gradient */
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    padding: 10px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.view-options-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+.view-options-btn i {
+    font-size: 1rem;
+}
+
+/* View Options Dropdown - Premium Style */
+.view-options-dropdown {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    width: 240px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+    overflow: hidden;
+    animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px;
+}
+
+.dropdown-item {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 12px;
+    transition: all 0.2s;
+    margin-bottom: 4px;
+}
+
+.dropdown-item:last-child {
+    margin-bottom: 0;
+}
+
+.dropdown-item:hover {
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--nogen-primary);
+    transform: translateX(4px);
+}
+
+.dropdown-item i:first-child {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
+    color: var(--nogen-primary);
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover i:first-child {
+    background: var(--nogen-gradient);
+    color: white;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Slide View Mode */
+.slide-view-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slide-content {
+    width: 80%;
+    max-width: 1000px;
+    height: 80%;
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 40px;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.close-slide-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: var(--text-primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: 0.2s;
+}
+
+.close-slide-btn:hover {
+    background: rgba(255, 0, 0, 0.1);
+    color: red;
+}
+
+.slide-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: center;
 }
 
 .message.user p {
@@ -676,4 +833,89 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-secondary);
+}
+
+/* --- TYPING INDICATOR --- */
+.typing-indicator {
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 12px;
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: var(--nogen-primary);
+    border-radius: 50%;
+    display: block;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes typingBounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+        opacity: 0.6;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Improve contrast for User Messages */
+.message.user p {
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Empty State / Quick Actions Improvements */
+.quick-actions h3 {
+    text-align: center;
+    margin-bottom: 24px;
+    color: var(--nogen-primary);
+}
+
+.action-buttons button {
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-buttons button:hover {
+    border-color: var(--nogen-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.25);
+}
+
+/* Ensure dark mode text is visible */
+.dark .assistant-message {
+    color: #e2e8f0;
+}
+
+.dark .message-timestamp {
+    color: #94a3b8;
+}
+
+/* Floating Input Area Shadow */
+.chat-input {
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.02);
 }

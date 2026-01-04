@@ -29,6 +29,7 @@ import Suggestions from "./Pages/Network/Suggestions";
 import ConnectionRequests from "./Pages/Network/ConnectionRequests";
 import Feed from "./Pages/Network/Feed";
 import Chat from "./Pages/Chat";
+import Pricing from "./Pages/Pricing";
 
 function App() {
   const { settings } = useSettings();
@@ -95,10 +96,26 @@ function App() {
             }
           />
           <Route
+            path="/profile/:userId"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/settings"
             element={
               <PrivateRoute>
                 <SettingsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/pricing"
+            element={
+              <PrivateRoute>
+                <Pricing />
               </PrivateRoute>
             }
           />

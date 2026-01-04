@@ -39,7 +39,7 @@ const Suggestions = () => {
                 suggestions.map(user => (
                     <div key={user._id} className="user-card">
                         <img
-                            src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=random`}
+                            src={(user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=random`).replace('http://nogen-backend', 'https://nogen-backend')}
                             alt={user.name}
                             className="user-avatar"
                         />

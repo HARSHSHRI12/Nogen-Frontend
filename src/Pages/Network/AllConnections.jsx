@@ -30,7 +30,7 @@ const AllConnections = () => {
                     <div key={conn._id} className="connection-card-li">
                         <div className="card-top-pattern"></div>
                         <img
-                            src={conn.avatar || `https://ui-avatars.com/api/?name=${conn.name}&background=random`}
+                            src={(conn.avatar || `https://ui-avatars.com/api/?name=${conn.name}&background=random`).replace('http://nogen-backend', 'https://nogen-backend')}
                             alt={conn.name}
                             className="connection-avatar"
                         />

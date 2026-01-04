@@ -1,279 +1,424 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+ @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
 
-:root {
-  --background-color: #1a1d24;
-  --panel-background: #282c34;
-  --panel-header-background: #21252b;
-  --border-color: #3a4048;
-  --text-primary: #abb2bf;
-  --text-secondary: #8d96a7;
-  --accent-color: #61afef;
-  --accent-hover: #6abaff;
-  --accent-secondary: #c678dd;
-  --difficulty-easy: #98c379;
-  --difficulty-medium: #e5c07b;
-  --difficulty-hard: #e06c75;
-  --font-primary: 'Inter', sans-serif;
-  --font-mono: 'Fira Code', monospace;
-}
+ :root {
+   /* Brand Theme - LeetCode Style but Nogen AI Colors */
+   --nogen-bg: #0a0a0a;
+   --nogen-card: #1a1a1a;
+   --nogen-card-light: #262626;
+   --nogen-border: #333333;
+   /* Purple primary and pink secondary */
+   --nogen-primary: #8b5cf6;
+   /* vivid purple */
+   --nogen-secondary: #ec4899;
+   /* bright pink */
+   --nogen-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+   --nogen-text: #eff1f6;
+   --nogen-text-dim: #9ca3af;
+   --nogen-white: #ffffff;
 
-body {
-  font-family: var(--font-primary);
-  background-color: var(--background-color);
-  color: var(--text-primary);
-  margin: 0;
-  overflow: hidden;
-}
+   --difficulty-easy: #00b8a3;
+   --difficulty-medium: #ffb800;
+   --difficulty-hard: #ff2d55;
+ }
 
-.code-practice-container {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 60px); /* Adjust based on navbar height */
-  padding: 15px;
-}
+ .code-practice-page {
+   background-color: var(--nogen-bg);
+   color: var(--nogen-text);
+   font-family: 'Plus Jakarta Sans', sans-serif;
+   width: 100vw;
+   height: 100vh;
+   display: flex;
+   flex-direction: column;
+   overflow: hidden;
+   margin: 0;
+   padding: 0;
+   /* Remove top/bottom space */
+ }
 
-.practice-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 0 5px;
-}
+ /* --- Professional Header --- */
+ .practice-nav {
+   height: 56px;
+   /* slightly taller for breathing room */
+   background: var(--nogen-card);
+   border-bottom: 1px solid var(--nogen-border);
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   padding: 0 20px;
+   z-index: 100;
+ }
 
-.practice-header h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
+ .nav-left {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+ }
 
-.filters {
-  display: flex;
-  gap: 20px;
-}
+ .logo-small {
+   background: var(--nogen-gradient);
+   background-clip: text;
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+   font-weight: 800;
+   font-size: 1.2rem;
+   margin-right: 12px;
+ }
 
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+ .back-link {
+   color: var(--nogen-text-dim);
+   text-decoration: none;
+   font-size: 0.85rem;
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   padding: 6px 10px;
+   border-radius: 6px;
+   transition: all 0.2s;
+ }
 
-.filter-group label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
+ .back-link:hover {
+   background: var(--nogen-card-light);
+   color: var(--nogen-white);
+ }
 
-.filter-group select {
-  background-color: var(--panel-background);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  transition: all 0.2s ease-in-out;
-}
+ .nav-right {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+ }
 
-.filter-group select:hover {
-  border-color: var(--accent-color);
-}
+ .run-btn-nav {
+   background: #333;
+   color: #fff;
+   border: none;
+   padding: 6px 16px;
+   border-radius: 5px;
+   font-weight: 600;
+   font-size: 0.85rem;
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   gap: 8px;
+ }
 
-.filter-group select:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(97, 175, 239, 0.3);
-}
+ .run-btn-nav:hover {
+   background: #444;
+ }
 
-.main-layout {
-  display: flex;
-  gap: 15px;
-  flex-grow: 1;
-  overflow: hidden;
-}
+ .submit-btn-nav {
+   background: #2cbb5d;
+   color: white;
+   border: none;
+   padding: 6px 16px;
+   border-radius: 5px;
+   font-weight: 700;
+   font-size: 0.85rem;
+   cursor: pointer;
+ }
 
-.layout-panel {
-  background-color: var(--panel-background);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
+ .submit-btn-nav:hover {
+   background: #35cf6d;
+ }
 
-.questions-panel {
-  flex: 0 0 25%;
-}
+ /* --- Workbench Flex/Grid --- */
+ .workbench {
+   flex: 1;
+   display: flex;
+   overflow: hidden;
+   padding: 0;
+   /* No space at edges */
+   gap: 2px;
+   /* Minimum gap between panes */
+   min-height: 0;
+ }
 
-.editor-panel {
-  flex: 1 1 45%;
-}
+ .pane {
+   background: var(--nogen-card);
+   border-radius: 8px;
+   border: 1px solid var(--nogen-border);
+   display: flex;
+   flex-direction: column;
+   overflow: hidden;
+   /* Ensure text inside panes is readable */
+   color: var(--nogen-text);
+ }
 
-.output-panel {
-  flex: 1 1 30%;
-}
+ /* 1. Sidebar Pane */
+ .sidebar-pane {
+   width: 280px;
+   flex-shrink: 0;
+   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ }
 
-.panel-header {
-  padding: 12px 15px;
-  background-color: var(--panel-header-background);
-  border-bottom: 1px solid var(--border-color);
-}
+ .sidebar-pane.collapsed {
+   width: 44px;
+ }
 
-.panel-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
+ .pane-header {
+   height: 52px;
+   /* Much taller for 100% zoom */
+   padding: 0 20px;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   background: var(--nogen-card-light);
+   border-bottom: 1px solid var(--nogen-border);
+   font-size: 0.95rem;
+   /* Larger font */
+   font-weight: 800;
+   text-transform: uppercase;
+   color: var(--nogen-white);
+   letter-spacing: 0.08em;
+ }
 
-.question-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  overflow-y: auto;
-}
+ .toggle-sidebar-btn {
+   background: rgba(255, 255, 255, 0.05);
+   border: 1px solid var(--nogen-border);
+   color: var(--nogen-text);
+   cursor: pointer;
+   width: 32px;
+   height: 32px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   border-radius: 6px;
+   transition: all 0.2s;
+ }
 
-.question-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  border-bottom: 1px solid var(--border-color);
-  font-size: 0.9rem;
-}
+ .toggle-sidebar-btn:hover {
+   background: var(--nogen-card-light);
+   color: var(--nogen-white);
+ }
 
-.question-list li:hover {
-  background-color: rgba(97, 175, 239, 0.1);
-}
+ .problem-list {
+   flex: 1;
+   overflow-y: auto;
+   list-style: none;
+   padding: 0;
+   margin: 0;
+ }
 
-.question-list li.active {
-  background-color: var(--accent-color);
-  color: #1e2227;
-}
+ .problem-item {
+   padding: 12px 16px;
+   border-bottom: 1px solid var(--nogen-border);
+   cursor: pointer;
+   transition: background 0.2s;
+ }
 
-.difficulty-tag {
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
+ .problem-item:hover {
+   background: var(--nogen-card-light);
+ }
 
-.difficulty-tag.easy {
-  background-color: var(--difficulty-easy);
-  color: #1e2227;
-}
-.difficulty-tag.medium {
-  background-color: var(--difficulty-medium);
-  color: #1e2227;
-}
-.difficulty-tag.hard {
-  background-color: var(--difficulty-hard);
-  color: #1e2227;
-}
+ .problem-item.active {
+   background: rgba(99, 102, 241, 0.1);
+   border-left: 3px solid var(--nogen-primary);
+ }
 
-.code-editor-container {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  overflow: hidden;
-}
+ .p-name {
+   display: block;
+   font-size: 0.85rem;
+   font-weight: 600;
+   margin-bottom: 4px;
+ }
 
-.code-editor-container .actions {
-  padding: 8px;
-  display: flex;
-  justify-content: flex-end;
-  background-color: var(--panel-header-background);
-  border-top: 1px solid var(--border-color);
-}
+ .difficulty-chip {
+   font-size: 0.7rem;
+   font-weight: 700;
+   text-transform: capitalize;
+ }
 
-.code-editor-container button {
-  background-color: var(--accent-color);
-  color: #1e2227;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
+ .difficulty-chip.easy {
+   color: var(--difficulty-easy);
+ }
 
-.code-editor-container button:hover {
-  background-color: var(--accent-hover);
-}
+ .difficulty-chip.medium {
+   color: var(--difficulty-medium);
+ }
 
-.code-editor-container button:disabled {
-  background-color: #333;
-  color: #888;
-  cursor: not-allowed;
-}
+ .difficulty-chip.hard {
+   color: var(--difficulty-hard);
+ }
 
-.output-console {
-  padding: 15px;
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  flex-grow: 1;
-  overflow-y: auto;
-  background-color: var(--background-color);
-}
+ /* 2. Content Area (Split) */
+ .content-area {
+   flex: 1;
+   display: flex;
+   gap: 2px;
+   /* Minimum gap */
+   min-width: 0;
+   min-height: 0;
+ }
 
-/* For QuestionDetails component */
-.question-details-container {
-  padding: 15px;
-  height: 100%;
-  overflow-y: auto;
-}
+ /* 3. Description Pane */
+ .description-pane {
+   flex: 1;
+   background: var(--nogen-card);
+ }
 
-.question-details-container h2 {
-  font-size: 1.3rem;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-}
+ .description-scroll {
+   flex: 1;
+   overflow-y: auto;
+   padding: 16px;
+ }
 
-.question-details-container p {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
+ .description-scroll h1 {
+   font-size: 1.25rem;
+   /* compact for 100% zoom */
+   font-weight: 800;
+   margin-bottom: 12px;
+   color: var(--nogen-white);
+ }
 
-/* Make editor take full height */
-.editor-panel {
-  display: flex;
-  flex-direction: column;
-}
-.editor-panel .panel-header {
-  flex-shrink: 0;
-}
-.editor-panel .code-editor-container {
-  flex-grow: 1;
-}
-.editor-panel .monaco-editor, .editor-panel .monaco-editor .overflow-guard {
-  height: 100% !important;
-}
+ .description-body {
+   line-height: 1.5;
+   font-size: 0.9rem;
+   /* slightly smaller for zoom 100% */
+   color: #d1d5db;
+ }
 
+ .example-block {
+   background: #1a1a1a;
+   border-radius: 6px;
+   padding: 12px;
+   margin: 12px 0;
+   border-left: 3px solid var(--nogen-primary);
+ }
 
-/* Scrollbar styles */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: var(--panel-background);
-}
-::-webkit-scrollbar-thumb {
-  background: #4f5660;
-  border-radius: 5px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #6a7381;
-}
+ .example-block code {
+   font-family: 'Fira Code', monospace;
+   color: var(--nogen-text);
+ }
 
-/* Framer Motion Animations */
-.layout-panel {
-  transform-origin: top left;
-}
+ /* 4. Code & Console Area (Vertical Stack) */
+ .code-stack {
+   flex: 1.5;
+   /* Give more width to editor area */
+   display: flex;
+   flex-direction: column;
+   gap: 2px;
+   min-height: 0;
+ }
+
+ .editor-pane-v {
+   flex: 2.5;
+   /* Increase Editor vertical height */
+   min-height: 0;
+ }
+
+ .console-pane-v {
+   flex: 1;
+   min-height: 0;
+   max-height: 40%;
+   /* Allow console to be taller on big screens */
+ }
+
+ .editor-header {
+   height: 48px;
+   /* Taller editor toolbar */
+   padding: 0 20px;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   background: #1e1e1e;
+   border-bottom: 1px solid var(--nogen-border);
+ }
+
+ .lang-dropdown {
+   background: transparent;
+   border: none;
+   color: var(--nogen-text);
+   font-weight: 700;
+   font-size: 0.8rem;
+   cursor: pointer;
+ }
+
+ .console-tabs {
+   display: flex;
+   padding: 0 20px;
+   gap: 24px;
+   border-bottom: 1px solid var(--nogen-border);
+   height: 48px;
+   /* Taller tabs */
+   background: var(--nogen-card-light);
+ }
+
+ .tab-btn {
+   background: transparent;
+   border: none;
+   color: var(--nogen-text-dim);
+   font-size: 0.9rem;
+   /* Larger font */
+   font-weight: 700;
+   height: 100%;
+   cursor: pointer;
+   position: relative;
+   transition: color 0.2s;
+ }
+
+ .tab-btn.active {
+   color: var(--nogen-white);
+ }
+
+ .tab-btn.active::after {
+   content: '';
+   position: absolute;
+   bottom: 0;
+   left: 0;
+   width: 100%;
+   height: 2px;
+   background: var(--nogen-primary);
+ }
+
+ .console-viewport {
+   flex: 1;
+   padding: 10px;
+   /* even more compact */
+   overflow-y: auto;
+   font-family: 'Fira Code', monospace;
+   font-size: 0.8rem;
+   background: #0d0d0d;
+ }
+
+ .testcase-card {
+   background: #1e1e1e;
+   padding: 8px;
+   /* compact */
+   border-radius: 4px;
+   margin-bottom: 8px;
+   border: 1px solid var(--nogen-border);
+ }
+
+ .tc-label {
+   color: var(--nogen-text-dim);
+   font-size: 0.75rem;
+   font-weight: 800;
+   margin-bottom: 8px;
+ }
+
+ .tc-content {
+   color: var(--nogen-white);
+ }
+
+ /* Scrollbar */
+ ::-webkit-scrollbar {
+   width: 6px;
+   height: 6px;
+ }
+
+ ::-webkit-scrollbar-track {
+   background: transparent;
+ }
+
+ ::-webkit-scrollbar-thumb {
+   background: #333;
+   border-radius: 10px;
+ }
+
+ ::-webkit-scrollbar-thumb:hover {
+   background: #444;
+ }
+
+ /* Editor visibility fix */
+ .monaco-editor-container {
+   height: calc(100% - 40px);
+ }

@@ -9,7 +9,7 @@ import {
 import { FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
 import "./Profile.css";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ProfileSettingsTab from './ProfileSettingsTab';
 import GlassCard from "../components/common/GlassCard";
 import AnimatedButton from "../components/common/AnimatedButton";
@@ -17,6 +17,9 @@ import AnimatedButton from "../components/common/AnimatedButton";
 const Profile = () => {
   const { user, logout, updateUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { userId } = useParams(); // Get userId from URL
+  const isOwnProfile = !userId || (user && userId === user._id); // Check if it's the current user's profile
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
@@ -38,19 +41,22 @@ const Profile = () => {
       return;
     }
     try {
-      // Prioritize profile route: this endpoint should return the unified profile object
-      const response = await axiosInstance.get("/profile/me");
+      const endpoint = isOwnProfile ? "/profile/me" : `/profile/${userId}`;
+      const response = await axiosInstance.get(endpoint);
       const data = response.data;
 
-      // Append timestamp to prevent caching issues
+      // Append timestamp to prevent caching issues and Force HTTPS
       if (data.profilePic) {
+        if (data.profilePic.startsWith('http://') && data.profilePic.includes('onrender.com')) {
+          data.profilePic = data.profilePic.replace('http://', 'https://');
+        }
         data.profilePic = `${data.profilePic}?t=${new Date().getTime()}`;
       }
 
       setProfile(data);
 
-      // Update context only if data has changed to avoid infinite loop
-      if (typeof updateUser === 'function' && (
+      // Only update context if it's own profile
+      if (isOwnProfile && typeof updateUser === 'function' && (
         user?.name !== data.name ||
         user?.profilePic !== data.profilePic ||
         user?.email !== data.email
@@ -70,26 +76,25 @@ const Profile = () => {
         goals: data.goals || "",
         linkedIn: data.socialLinks?.linkedIn || "",
         github: data.socialLinks?.github || "",
-        // Add other fields if necessary
       });
     } catch (err) {
       console.error("Profile Fetch Error:", err);
       // Fallback or specific error handling
       if (err.response && err.response.status === 404) {
-        // Maybe the user exists but no profile doc?
-        // In a real app, maybe trigger creation or show empty state.
-        setError("Profile not found. Please contact support.");
+        setError("Profile not found.");
       } else {
         setError("Failed to fetch profile. " + (err.response?.data?.message || err.message));
       }
       if (err.response && err.response.status === 401) {
-        logout();
-        navigate("/login");
+        if (isOwnProfile) {
+          logout();
+          navigate("/login");
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, navigate, logout]);
+  }, [isAuthenticated, navigate, logout, userId, isOwnProfile]);
 
   useEffect(() => {
     fetchProfile();
@@ -214,16 +219,20 @@ const Profile = () => {
                   className="profile-avatar"
                   onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${profile?.name || 'User'}&background=random`; }}
                 />
-                <div className="profile-avatar-overlay">
-                  <FiCamera className="camera-icon" />
-                </div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  hidden
-                />
+                {isOwnProfile && (
+                  <div className="profile-avatar-overlay">
+                    <FiCamera className="camera-icon" />
+                  </div>
+                )}
+                {isOwnProfile && (
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    hidden
+                  />
+                )}
               </div >
 
               <div className="profile-identity">
@@ -251,7 +260,7 @@ const Profile = () => {
             </div >
 
             <div className="profile-actions-col">
-              {!editMode ? (
+              {isOwnProfile && (!editMode ? (
                 <AnimatedButton
                   width="100%"
                   onClick={() => setEditMode(true)}
@@ -268,7 +277,7 @@ const Profile = () => {
                 >
                   Cancel Editing
                 </AnimatedButton>
-              )}
+              ))}
 
 
             </div>

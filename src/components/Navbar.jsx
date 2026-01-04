@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSun, FiMoon, FiMenu, FiX, FiHome, FiMail, FiCpu, FiCode, FiBook, FiUser, FiLogIn, FiLogOut } from 'react-icons/fi'; // Using feather icons for cleaner look
+import { FiSun, FiMoon, FiMenu, FiX, FiHome, FiMail, FiCpu, FiCode, FiBook, FiUser, FiLogIn, FiLogOut, FiTrendingUp } from 'react-icons/fi'; // Using feather icons for cleaner look
 import { FaCoins } from 'react-icons/fa'; // Keep FA for specific solid icons if preferred
 import './Navbar.css';
 import { useAuth } from '../context/AuthContext';
@@ -145,7 +145,7 @@ const Navbar = () => {
                   onBlur={() => setTimeout(() => setIsProfileOpen(false), 200)}
                 >
                   <img
-                    src={user?.profilePic || user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
+                    src={(user?.profilePic || user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`).replace('http://nogen-backend', 'https://nogen-backend')}
                     alt="User"
                     className="profile-img-nav"
                     onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`; }}
@@ -163,6 +163,9 @@ const Navbar = () => {
                     >
                       <Link to="/profile" className="dropdown-item">
                         <FiUser /> Profile
+                      </Link>
+                      <Link to="/pricing" className="dropdown-item">
+                        <FiTrendingUp /> Upgrade Plan
                       </Link>
                       <button onClick={logout} className="dropdown-item logout-btn">
                         <FiLogOut /> Logout

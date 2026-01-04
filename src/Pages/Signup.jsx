@@ -109,19 +109,25 @@ const Signup = () => {
     try {
       const response = await axiosInstance.post('/auth/signup', formData);
 
-      const data = response.data;
-
       if (response.status === 200 || response.status === 201) {
-        login(data.user);
-        localStorage.setItem('token', data.token); // Store token
+        const { user } = response.data;
+        login(user);
+
         alert('Signup successful!');
-        navigate('/profile'); // Redirect to profile page after signup
+
+        // Determine redirect path based on role
+        if (user.role === 'teacher') {
+          navigate('/teacher-dashboard');
+        } else {
+          navigate('/student-dashboard');
+        }
       } else {
-        alert(data.errors[0].msg || 'Signup failed');
+        alert(response.data?.message || 'Signup failed');
       }
     } catch (error) {
       console.error("Error during signup:", error);
-      alert("Signup failed, please try again later.");
+      const msg = error.response?.data?.message || "Signup failed, please try again later.";
+      alert(msg);
     }
   };
 
@@ -249,36 +255,36 @@ const Signup = () => {
                           </select>
                         </div>
 
-                       <div className="form-group checkbox-group">
-                      <div className="checkbox-group">
-                        <label>
-                          <input
-                            type="checkbox"
-                            id="agreeTerms"
-                            name="agreeTerms"
-                            checked={formData.agreeTerms}
-                            onChange={handleChange}
-                            required
-                          />
-                          <span>
-                            I agree to the <a href="#">terms and conditions</a>
-                          </span>
-                        </label>
-                      </div>
+                        <div className="form-group checkbox-group">
+                          <div className="checkbox-group">
+                            <label>
+                              <input
+                                type="checkbox"
+                                id="agreeTerms"
+                                name="agreeTerms"
+                                checked={formData.agreeTerms}
+                                onChange={handleChange}
+                                required
+                              />
+                              <span>
+                                I agree to the <a href="#">terms and conditions</a>
+                              </span>
+                            </label>
+                          </div>
 
-                      {errors.agreeTerms && (
-                        <p className="error-text">{errors.agreeTerms}</p>
-                      )}
-                      </div>
+                          {errors.agreeTerms && (
+                            <p className="error-text">{errors.agreeTerms}</p>
+                          )}
+                        </div>
                         <div className="form-footer">
-                        <p className="already-account">
-                          Already have an account? <Link to="/login" className="login-link">Login</Link>
-                        </p>
+                          <p className="already-account">
+                            Already have an account? <Link to="/login" className="login-link">Login</Link>
+                          </p>
 
-                        <button type="submit" className="btn btn-primary">
-                          Next
-                        </button>
-                      </div>
+                          <button type="submit" className="btn btn-primary">
+                            Next
+                          </button>
+                        </div>
                       </form>
                     ) : (
                       <form className="signup-form" onSubmit={handleSubmit}>
@@ -297,7 +303,7 @@ const Signup = () => {
             </div>
           </div>
         </div>
-      </div>  
+      </div>
     </div>
   );
 }

@@ -1,24 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import CodeEditor from '../components/CodeEditor';
-import QuestionDetails from '../components/QuestionDetails';
 import { generateMockQuestions } from '../components/mockQuestions';
 import './CodingPractice.css';
 
-const CodePractice = () => {
+const CodingPractice = () => {
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [filter, setFilter] = useState('all');
-  const [topicFilter, setTopicFilter] = useState('all');
   const [executionOutput, setExecutionOutput] = useState('');
-
-  const topics = [
-    'Array', 'String', 'Linked List', 'Stack', 'Queue', 
-    'Tree', 'BST', 'Graph', 'Heap', 'Sorting', 
-    'Searching', 'Dynamic Programming', 'Backtracking',
-    'Greedy', 'Divide and Conquer', 'Bit Manipulation',
-    'Math', 'Geometry', 'Design', 'Hash Table'
-  ];
+  const [activeTab, setActiveTab] = useState('testcases');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const mockQuestions = generateMockQuestions();
@@ -28,88 +21,124 @@ const CodePractice = () => {
     }
   }, []);
 
-  const filteredQuestions = questions.filter(q => {
-    const matchesDifficulty = filter === 'all' || q.difficulty === filter;
-    const matchesTopic = topicFilter === 'all' || q.topics.includes(topicFilter);
-    return matchesDifficulty && matchesTopic;
-  });
-
-  const handleQuestionSelect = (question) => {
-    setCurrentQuestion(question);
-    setExecutionOutput('');
-  };
+  const filteredQuestions = questions.filter(q =>
+    filter === 'all' || q.difficulty === filter
+  );
 
   return (
-    <motion.div 
-      className="code-practice-container"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <header className="practice-header">
-        <h1>Code Practice</h1>
-        <div className="filters">
-          <div className="filter-group">
-            <label htmlFor="difficulty-filter">Difficulty:</label>
-            <select id="difficulty-filter" onChange={(e) => setFilter(e.target.value)} value={filter}>
-              <option value="all">All</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
-          <div className="filter-group">
-            <label htmlFor="topic-filter">Topic:</label>
-            <select id="topic-filter" onChange={(e) => setTopicFilter(e.target.value)} value={topicFilter}>
-              <option value="all">All</option>
-              {topics.map((t, i) => <option key={i} value={t}>{t}</option>)}
-            </select>
-          </div>
-        </div>
-      </header>
+    <div className="code-practice-page">
 
-      <div className="main-layout">
-        <motion.div className="layout-panel questions-panel" layout>
-          <div className="panel-header">
-            <h3>Questions</h3>
-          </div>
-          <ul className="question-list">
-            {filteredQuestions.map((q) => (
-              <li 
-                key={q.title} 
-                onClick={() => handleQuestionSelect(q)}
-                className={currentQuestion?.title === q.title ? 'active' : ''}
-              >
-                <span>{q.title}</span>
-                <span className={`difficulty-tag ${q.difficulty}`}>{q.difficulty}</span>
-              </li>
-            ))}
-          </ul>
-        </motion.div>
 
-        <div className="layout-panel editor-panel">
-          {currentQuestion && (
-            <>
-              <motion.div className="panel-header" layout>
-                <QuestionDetails question={currentQuestion} />
-              </motion.div>
-              <CodeEditor 
-                question={currentQuestion} 
-                setExecutionOutput={setExecutionOutput} 
-              />
-            </>
+      <main className="workbench">
+        {/* Sidebar */}
+        <aside className={`pane sidebar-pane ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+          <div className="pane-header">
+            {!isSidebarCollapsed && <span>Questions</span>}
+            <button
+              className="toggle-sidebar-btn"
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            >
+              <i className={`fas ${isSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
+            </button>
+          </div>
+          {!isSidebarCollapsed && (
+            <ul className="problem-list">
+              {filteredQuestions.map(q => (
+                <li
+                  key={q.title}
+                  className={`problem-item ${currentQuestion?.title === q.title ? 'active' : ''}`}
+                  onClick={() => {
+                    setCurrentQuestion(q);
+                    setExecutionOutput('');
+                    setActiveTab('testcases');
+                  }}
+                >
+                  <span className="p-name">{q.title}</span>
+                  <span className={`difficulty-chip ${q.difficulty}`}>{q.difficulty}</span>
+                </li>
+              ))}
+            </ul>
           )}
-        </div>
+        </aside>
 
-        <div className="layout-panel output-panel">
-          <div className="panel-header">
-            <h3>Output</h3>
+        <section className="content-area">
+          {/* Description */}
+          <div className="pane description-pane">
+            <div className="pane-header">Description</div>
+            <div className="description-scroll">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentQuestion?.title}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                >
+                  <h1>{currentQuestion?.title}</h1>
+                  <div className="description-body">
+                    <p>{currentQuestion?.description}</p>
+                    <div className="example-block">
+                      <div className="tc-label">Example 1</div>
+                      <strong>Input: </strong> <code>{currentQuestion?.testCases?.[0]?.input}</code><br />
+                      <strong>Output: </strong> <code>{currentQuestion?.testCases?.[0]?.output}</code>
+                    </div>
+                    <div style={{ marginTop: '24px' }}>
+                      <h4 style={{ color: 'var(--nogen-white)' }}>Constraints:</h4>
+                      <ul style={{ paddingLeft: '20px', fontSize: '0.9rem', color: 'var(--nogen-text-dim)' }}>
+                        <li>1 {'<='} array.length {'<='} 10^5</li>
+                        <li>Time Limit: 1.0s</li>
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
-          <pre className="output-console">{executionOutput}</pre>
-        </div>
-      </div>
-    </motion.div>
+
+          {/* Code & Console */}
+          <div className="code-stack">
+            {/* Editor */}
+            <div className="pane editor-pane-v">
+              <CodeEditor
+                question={currentQuestion}
+                setExecutionOutput={setExecutionOutput}
+              />
+            </div>
+
+            {/* Console */}
+            <div className="pane console-pane-v">
+              <div className="console-tabs">
+                <button
+                  className={`tab-btn ${activeTab === 'testcases' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('testcases')}
+                >Testcases</button>
+                <button
+                  className={`tab-btn ${activeTab === 'result' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('result')}
+                >Result</button>
+              </div>
+              <div className="console-viewport">
+                {activeTab === 'testcases' ? (
+                  <div>
+                    {currentQuestion?.testCases?.map((tc, i) => (
+                      <div key={i} className="testcase-card">
+                        <div className="tc-label">Case {i + 1}</div>
+                        <div className="tc-content">{tc.input}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                    {executionOutput || "Run code to see results..."}
+                  </pre>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 };
 
-export default CodePractice;
+export default CodingPractice;
